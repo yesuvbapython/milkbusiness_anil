@@ -1,0 +1,508 @@
+<app-login *ngIf="!isLoggedIn"></app-login>
+
+<div class="container" *ngIf="isLoggedIn">
+  <header>
+    <div class="header-content">
+      <div class="logo-section">
+        <h1>🥛 SHREE NIMISHAMBA ENTERPRISES</h1>
+        <p>Milk Business Management System</p>
+      </div>
+      <div class="user-section">
+        <button class="logout-btn" (click)="logout()">🚪 Logout</button>
+      </div>
+    </div>
+  </header>
+
+  <nav>
+    <button (click)="activeTab = 'suppliers'" [class.active]="activeTab === 'suppliers'">🏪 Suppliers</button>
+    <button (click)="activeTab = 'products'" [class.active]="activeTab === 'products'">📦 Products</button>
+    <button (click)="activeTab = 'routes'" [class.active]="activeTab === 'routes'">🚛 Routes</button>
+    <button (click)="activeTab = 'business-points'" [class.active]="activeTab === 'business-points'">🏢 Business Points</button>
+    <button (click)="activeTab = 'rates'" [class.active]="activeTab === 'rates'">💰 Rates</button>
+    <button (click)="activeTab = 'sales'" [class.active]="activeTab === 'sales'">📊 Daily Sales</button>
+    <button (click)="activeTab = 'reports'" [class.active]="activeTab === 'reports'">📈 Reports</button>
+  </nav>
+
+  <!-- Suppliers Tab -->
+  <div *ngIf="activeTab === 'suppliers'" class="tab-content">
+    <h2>Suppliers Management</h2>
+    <form (ngSubmit)="saveSupplier()" #supplierForm="ngForm">
+      <div class="form-row">
+        <input type="text" [(ngModel)]="currentSupplier.name" name="name" placeholder="Supplier Name" required>
+        <button type="submit">Add Supplier</button>
+      </div>
+    </form>
+    
+    <table>
+      <thead>
+        <tr>
+          <th>Supplier Name</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let supplier of suppliers">
+          <td>{{supplier.name}}</td>
+          <td>
+            <button (click)="editSupplier(supplier)">Update</button>
+            <button (click)="deleteSupplier(supplier.id)">Delete</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Products Tab -->
+  <div *ngIf="activeTab === 'products'" class="tab-content">
+    <h2>Products Management</h2>
+    <form (ngSubmit)="saveProduct()" #productForm="ngForm">
+      <div class="form-row">
+        <select [(ngModel)]="currentProduct.supplier" name="supplier" required>
+          <option value="">Select Supplier</option>
+          <option *ngFor="let supplier of suppliers" [value]="supplier.id">{{supplier.name}}</option>
+        </select>
+        <input type="text" [(ngModel)]="currentProduct.name" name="name" placeholder="Product Name" required>
+        <button type="submit">Add Product</button>
+      </div>
+    </form>
+    
+    <table>
+      <thead>
+        <tr>
+          <th>Supplier</th>
+          <th>Product Name</th>
+          <th>Crate Multiplier</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let product of products">
+          <td>{{product.supplier_name}}</td>
+          <td>{{product.name}}</td>
+          <td>{{product.crate_multiplier}}</td>
+          <td>
+            <button (click)="editProduct(product)">Update</button>
+            <button (click)="deleteProduct(product.id)">Delete</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Routes Tab -->
+  <div *ngIf="activeTab === 'routes'" class="tab-content">
+    <h2>Routes Management</h2>
+    <form (ngSubmit)="saveRoute()" #routeForm="ngForm">
+      <div class="form-row">
+        <input type="text" [(ngModel)]="currentRoute.name" name="name" placeholder="Route Name (M3, M4...)" required>
+        <button type="submit">Add Route</button>
+      </div>
+    </form>
+    
+    <table>
+      <thead>
+        <tr>
+          <th>Route</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let route of routes">
+          <td>{{route.name}}</td>
+          <td>
+            <button (click)="editRoute(route)">Update</button>
+            <button (click)="deleteRoute(route.id)">Delete</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Business Points Tab -->
+  <div *ngIf="activeTab === 'business-points'" class="tab-content">
+    <h2>Business Points Management (Agents)</h2>
+    <form (ngSubmit)="saveBusinessPoint()" #bpForm="ngForm">
+      <div class="form-row">
+        <select [(ngModel)]="currentBusinessPoint.route" name="route" required>
+          <option value="">Select Route</option>
+          <option *ngFor="let route of routes" [value]="route.id">{{route.name}}</option>
+        </select>
+        <input type="text" [(ngModel)]="currentBusinessPoint.name" name="name" placeholder="Agent Name (Shekara, Agent M4...)" required>
+        <button type="submit">Add Agent</button>
+      </div>
+    </form>
+    
+    <table>
+      <thead>
+        <tr>
+          <th>Route</th>
+          <th>Agent Name</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let bp of businessPoints">
+          <td>{{bp.route_name}}</td>
+          <td>{{bp.name}}</td>
+          <td>
+            <button (click)="editBusinessPoint(bp)">Update</button>
+            <button (click)="deleteBusinessPoint(bp.id)">Delete</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Daily Sales Tab -->
+  <div *ngIf="activeTab === 'sales'" class="tab-content">
+    <h2>Daily Sales Entry</h2>
+    
+    <!-- Route Selection -->
+    <div class="route-buttons">
+      <h3>Select Route:</h3>
+      <button *ngFor="let route of routes" 
+              (click)="selectRoute(route)" 
+              [class.active]="selectedRoute?.id === route.id">
+        {{route.name}}
+      </button>
+    </div>
+
+    <div *ngIf="selectedRoute" class="sales-section">
+      <h3>{{selectedRoute.name}} Route Sales</h3>
+      
+      <!-- Route Level Sales -->
+      <div class="route-sales">
+        <h4>Route Summary</h4>
+        <form (ngSubmit)="saveRouteSales()" #routeSalesForm="ngForm">
+          <div class="form-row">
+            <div class="form-field">
+              <label>Date:</label>
+              <input type="date" [(ngModel)]="currentSales.date" name="date" required>
+            </div>
+            <div class="form-field">
+              <label>Opening Balance:</label>
+              <input type="number" [(ngModel)]="currentSales.opening_balance" name="opening_balance" step="0.01">
+            </div>
+            <div class="form-field">
+              <label>Total Sales Amount:</label>
+              <input type="number" [(ngModel)]="currentSales.sales_amount" name="sales_amount" step="0.01">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-field">
+              <label>Total Received Amount:</label>
+              <input type="number" [(ngModel)]="currentSales.received_amount" name="received_amount" step="0.01">
+            </div>
+            <div class="form-field">
+              <label>Other Deductions:</label>
+              <input type="number" [(ngModel)]="currentSales.other_deductions" name="other_deductions" step="0.01">
+            </div>
+            <div class="form-field">
+              <label>Total Liters:</label>
+              <input type="number" [(ngModel)]="currentSales.total_liters" name="total_liters" step="0.01">
+            </div>
+          </div>
+          <div class="form-row">
+            <button type="submit">Save Route Sales</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Business Point Sales -->
+      <div class="business-point-sales">
+        <h4>Business Point Sales</h4>
+        <div *ngFor="let bp of getRouteBusinessPoints()" class="bp-card">
+          <h5>{{bp.name}}</h5>
+          <form (ngSubmit)="saveBusinessPointSales(bp)" #bpSalesForm="ngForm">
+            <div class="form-row">
+              <input type="date" [(ngModel)]="getBPSales(bp).date" name="date_{{bp.id}}" required>
+              <input type="number" [(ngModel)]="getBPSales(bp).opening_balance" name="opening_{{bp.id}}" placeholder="Opening Balance" step="0.01">
+              <input type="number" [(ngModel)]="getBPSales(bp).sales_amount" name="sales_{{bp.id}}" placeholder="Sales Amount" step="0.01">
+            </div>
+            <div class="form-row">
+              <input type="number" [(ngModel)]="getBPSales(bp).received_amount" name="received_{{bp.id}}" placeholder="Received Amount" step="0.01">
+              <input type="number" [(ngModel)]="getBPSales(bp).other_deductions" name="deductions_{{bp.id}}" placeholder="Deductions" step="0.01">
+              <input type="number" [(ngModel)]="getBPSales(bp).total_liters" name="liters_{{bp.id}}" placeholder="Liters" step="0.01">
+              <button type="submit">Save {{bp.name}} Sales</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Supplier-wise Sales Summary -->
+      <div class="supplier-sales">
+        <h4>Supplier-wise Sales Summary</h4>
+        <table>
+          <thead>
+            <tr>
+              <th>Supplier</th>
+              <th>Product</th>
+              <th>Quantity</th>
+              <th>Rate</th>
+              <th>Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let rate of getRouteRates()">
+              <td>{{rate.supplier_name}}</td>
+              <td>{{rate.product_name}}</td>
+              <td><input type="number" placeholder="Qty" step="0.01"></td>
+              <td>₹{{rate.rate}}</td>
+              <td>₹0.00</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rates Tab -->
+  <div *ngIf="activeTab === 'rates'" class="tab-content">
+    <h2>Rates Management</h2>
+    
+    <h3>Route Rates</h3>
+    <form (ngSubmit)="saveRouteRate()" #rateForm="ngForm">
+      <div class="form-row">
+        <select [(ngModel)]="currentRate.route" name="route" required>
+          <option value="">Select Route</option>
+          <option *ngFor="let route of routes" [value]="route.id">{{route.name}}</option>
+        </select>
+        <select [(ngModel)]="currentRate.product" name="product" required>
+          <option value="">Select Product</option>
+          <option *ngFor="let product of products" [value]="product.id">{{product.supplier_name}} - {{product.name}}</option>
+        </select>
+        <input type="number" [(ngModel)]="currentRate.rate" name="rate" placeholder="Rate" step="0.01" required>
+        <button type="submit">Save Route Rate</button>
+      </div>
+    </form>
+    
+    <table>
+      <thead>
+        <tr>
+          <th>Route</th>
+          <th>Supplier</th>
+          <th>Product</th>
+          <th>Rate</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let rate of routeRates">
+          <td>{{rate.route_name}}</td>
+          <td>{{rate.supplier_name}}</td>
+          <td>{{rate.product_name}}</td>
+          <td>₹{{rate.rate}}</td>
+          <td>
+            <button (click)="editRouteRate(rate)">Update</button>
+            <button (click)="deleteRouteRate(rate.id)">Delete</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>Business Point Rates</h3>
+    <form (ngSubmit)="saveBusinessPointRate()" #bpRateForm="ngForm">
+      <div class="form-row">
+        <select [(ngModel)]="currentBPRate.business_point" name="business_point" required>
+          <option value="">Select Business Point</option>
+          <option *ngFor="let bp of businessPoints" [value]="bp.id">{{bp.route_name}} - {{bp.name}}</option>
+        </select>
+        <select [(ngModel)]="currentBPRate.product" name="product" required>
+          <option value="">Select Product</option>
+          <option *ngFor="let product of products" [value]="product.id">{{product.supplier_name}} - {{product.name}}</option>
+        </select>
+        <input type="number" [(ngModel)]="currentBPRate.rate" name="rate" placeholder="Rate" step="0.01" required>
+        <button type="submit">Save BP Rate</button>
+      </div>
+    </form>
+    
+    <table>
+      <thead>
+        <tr>
+          <th>Business Point</th>
+          <th>Supplier</th>
+          <th>Product</th>
+          <th>Rate</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let rate of businessPointRates">
+          <td>{{rate.business_point_name}}</td>
+          <td>{{rate.supplier_name}}</td>
+          <td>{{rate.product_name}}</td>
+          <td>₹{{rate.rate}}</td>
+          <td>
+            <button (click)="editBusinessPointRate(rate)">Update</button>
+            <button (click)="deleteBusinessPointRate(rate.id)">Delete</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Agent Cash Flow Tab -->
+  <div *ngIf="activeTab === 'agent-flow'" class="tab-content">
+    <h2>Agent Cash Flow</h2>
+    <form (ngSubmit)="saveAgentCashFlow()" #agentForm="ngForm">
+      <div class="form-row">
+        <select [(ngModel)]="currentAgentFlow.route" name="route" required>
+          <option value="">Select Route</option>
+          <option *ngFor="let route of routes" [value]="route.id">{{route.name}}</option>
+        </select>
+        <input type="date" [(ngModel)]="currentAgentFlow.date" name="date" required>
+      </div>
+      <div class="form-row">
+        <input type="number" [(ngModel)]="currentAgentFlow.inward_amount" name="inward_amount" placeholder="Inward Amount" step="0.01">
+        <input type="number" [(ngModel)]="currentAgentFlow.outward_amount" name="outward_amount" placeholder="Outward Amount" step="0.01">
+        <button type="submit">Save Cash Flow</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Bank Cash Flow Tab -->
+  <div *ngIf="activeTab === 'bank-flow'" class="tab-content">
+    <h2>Bank Cash Flow</h2>
+    <form (ngSubmit)="saveBankCashFlow()" #bankForm="ngForm">
+      <div class="form-row">
+        <input type="date" [(ngModel)]="currentBankFlow.date" name="date" required>
+        <input type="number" [(ngModel)]="currentBankFlow.credit_amount" name="credit_amount" placeholder="Credit Amount" step="0.01">
+      </div>
+      <div class="form-row">
+        <input type="number" [(ngModel)]="currentBankFlow.debit_amount" name="debit_amount" placeholder="Debit Amount" step="0.01">
+        <input type="text" [(ngModel)]="currentBankFlow.description" name="description" placeholder="Description">
+        <button type="submit">Save Bank Flow</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Reports Tab -->
+  <div *ngIf="activeTab === 'reports'" class="tab-content">
+    <h2>Reports</h2>
+    <div class="report-controls">
+      <div class="date-range">
+        <label>From Date:</label>
+        <input type="date" [(ngModel)]="reportFromDate">
+        <label>To Date:</label>
+        <input type="date" [(ngModel)]="reportToDate">
+      </div>
+      <div class="filters">
+        <select [(ngModel)]="selectedRouteId" (change)="onRouteChange()">
+          <option value="">All Routes</option>
+          <option *ngFor="let route of routes" [value]="route.id">{{route.name}}</option>
+        </select>
+        <select [(ngModel)]="selectedBusinessPointId" [disabled]="!selectedRouteId">
+          <option value="">{{selectedRouteId ? 'All Business Points in Route' : 'Select Route First'}}</option>
+          <option *ngFor="let bp of getFilteredBusinessPoints()" [value]="bp.id">{{bp.name}}</option>
+        </select>
+      </div>
+    </div>
+    
+    <div class="report-buttons">
+      <button (click)="generateCashBalanceReport()">Cash Balance Report</button>
+      <button (click)="generateBusinessPointCashBalance()">Business Point Cash Balance</button>
+      <button (click)="generateAgentCashFlowReport()">Agent Cash Flow</button>
+      <button (click)="generateBankCashFlowReport()">Bank Cash Flow</button>
+      <button (click)="generateCashClosingBalance()">Cash Closing Balance</button>
+    </div>
+
+    <div *ngIf="reportData" class="report-section">
+      <h3>{{reportTitle}}</h3>
+      <div *ngIf="reportType === 'cash-balance'">
+        <table>
+          <thead>
+            <tr>
+              <th>Route</th>
+              <th>Agent</th>
+              <th>Opening Balance</th>
+              <th>Sales Amount</th>
+              <th>Total Amount</th>
+              <th>Received Amount</th>
+              <th>Net Balance</th>
+              <th>Total Liters</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of reportData">
+              <td>{{item.route}}</td>
+              <td>{{item.agent}}</td>
+              <td>₹{{item.opening_balance}}</td>
+              <td>₹{{item.sales_amount}}</td>
+              <td>₹{{item.total_amount}}</td>
+              <td>₹{{item.received_amount}}</td>
+              <td>₹{{item.net_balance}}</td>
+              <td>{{item.total_liters}}L</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div *ngIf="reportType === 'bp-cash-balance'">
+        <table>
+          <thead>
+            <tr>
+              <th>Business Point</th>
+              <th>Route</th>
+              <th>Opening Balance</th>
+              <th>Sales Amount</th>
+              <th>Total Amount</th>
+              <th>Received Amount</th>
+              <th>Net Balance</th>
+              <th>Total Liters</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of reportData">
+              <td>{{item.business_point}}</td>
+              <td>{{item.route}}</td>
+              <td>₹{{item.opening_balance}}</td>
+              <td>₹{{item.sales_amount}}</td>
+              <td>₹{{item.total_amount}}</td>
+              <td>₹{{item.received_amount}}</td>
+              <td>₹{{item.net_balance}}</td>
+              <td>{{item.total_liters}}L</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div *ngIf="reportType === 'bp-cash-flow'" class="closing-balance">
+        <div class="balance-item">
+          <label>Business Point:</label>
+          <span>{{reportData.business_point}}</span>
+        </div>
+        <div class="balance-item">
+          <label>Route:</label>
+          <span>{{reportData.route}}</span>
+        </div>
+        <div class="balance-item">
+          <label>Inward Amount:</label>
+          <span>₹{{reportData.inward_amount}}</span>
+        </div>
+        <div class="balance-item">
+          <label>Outward Amount:</label>
+          <span>₹{{reportData.outward_amount}}</span>
+        </div>
+        <div class="balance-item total">
+          <label>Closing Balance:</label>
+          <span>₹{{reportData.closing_balance}}</span>
+        </div>
+      </div>
+
+      <div *ngIf="reportType === 'closing-balance'" class="closing-balance">
+        <div class="balance-item">
+          <label>Agent Cash Flow Total:</label>
+          <span>₹{{reportData.agent_cash_flow_total}}</span>
+        </div>
+        <div class="balance-item">
+          <label>Bank Cash Flow Total:</label>
+          <span>₹{{reportData.bank_cash_flow_total}}</span>
+        </div>
+        <div class="balance-item total">
+          <label>Total Closing Balance:</label>
+          <span>₹{{reportData.total_closing_balance}}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,381 @@
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+header {
+  margin-bottom: 30px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 20px;
+  border-radius: 10px;
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo-section {
+  text-align: left;
+}
+
+.user-section {
+  display: flex;
+  align-items: center;
+}
+
+.logout-btn {
+  padding: 10px 20px;
+  background: rgba(255,255,255,0.2);
+  color: white;
+  border: 1px solid rgba(255,255,255,0.3);
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.logout-btn:hover {
+  background: rgba(255,255,255,0.3);
+}
+
+header h1 {
+  margin: 0;
+  font-size: 2.5em;
+}
+
+header p {
+  margin: 10px 0 0 0;
+  font-size: 1.2em;
+  opacity: 0.9;
+}
+
+nav {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+}
+
+nav button {
+  padding: 12px 20px;
+  border: none;
+  background: #f0f0f0;
+  cursor: pointer;
+  border-radius: 5px;
+  font-size: 14px;
+  transition: all 0.3s;
+}
+
+nav button:hover {
+  background: #e0e0e0;
+}
+
+nav button.active {
+  background: #667eea;
+  color: white;
+}
+
+.tab-content {
+  background: white;
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.tab-content h2 {
+  margin-top: 0;
+  color: #333;
+  border-bottom: 2px solid #667eea;
+  padding-bottom: 10px;
+}
+
+.form-row {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.form-row input,
+.form-row select {
+  flex: 1;
+  min-width: 200px;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 14px;
+}
+
+.form-row button {
+  padding: 12px 25px;
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.3s;
+}
+
+.form-row button:hover {
+  background: #5a6fd8;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+table th,
+table td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+table th {
+  background: #f8f9fa;
+  font-weight: bold;
+  color: #333;
+}
+
+table tr:hover {
+  background: #f8f9fa;
+}
+
+.report-controls {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+}
+
+.report-controls input,
+.report-controls select {
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+}
+
+.report-controls button {
+  padding: 10px 20px;
+  background: #28a745;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.report-controls button:hover {
+  background: #218838;
+}
+
+.report-section {
+  margin-top: 30px;
+}
+
+.report-section h3 {
+  color: #333;
+  margin-bottom: 20px;
+}
+
+.closing-balance {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+  border-left: 4px solid #667eea;
+}
+
+.balance-item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 15px;
+  padding: 10px 0;
+}
+
+.balance-item label {
+  font-weight: bold;
+  color: #333;
+}
+
+.balance-item span {
+  font-size: 1.1em;
+  color: #667eea;
+}
+
+.balance-item.total {
+  border-top: 2px solid #667eea;
+  margin-top: 20px;
+  padding-top: 20px;
+}
+
+.balance-item.total span {
+  font-size: 1.3em;
+  font-weight: bold;
+  color: #28a745;
+}
+
+.route-buttons {
+  margin-bottom: 30px;
+}
+
+.route-buttons h3 {
+  margin-bottom: 15px;
+  color: #333;
+}
+
+.route-buttons button {
+  margin: 5px;
+  padding: 10px 20px;
+  background: #f0f0f0;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.route-buttons button:hover {
+  background: #e0e0e0;
+}
+
+.route-buttons button.active {
+  background: #667eea;
+  color: white;
+  border-color: #667eea;
+}
+
+.sales-section {
+  margin-top: 20px;
+}
+
+.route-sales, .business-point-sales, .supplier-sales {
+  margin-bottom: 30px;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border-left: 4px solid #667eea;
+}
+
+.bp-card {
+  margin-bottom: 20px;
+  padding: 15px;
+  background: white;
+  border-radius: 5px;
+  border: 1px solid #ddd;
+}
+
+.bp-card h5 {
+  margin: 0 0 15px 0;
+  color: #667eea;
+  font-size: 1.1em;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 200px;
+}
+
+.form-field label {
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 5px;
+  font-size: 14px;
+}
+
+.form-field input {
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 14px;
+}
+
+.report-buttons {
+  margin-top: 20px;
+}
+
+.report-buttons h4 {
+  margin: 20px 0 10px 0;
+  color: #667eea;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 5px;
+}
+
+.report-buttons button {
+  margin: 5px 10px 5px 0;
+  padding: 10px 15px;
+  background: #28a745;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.report-buttons button:hover {
+  background: #218838;
+}
+
+.date-range {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.date-range label {
+  font-weight: bold;
+  color: #333;
+}
+
+.date-range input {
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.filters {
+  display: flex;
+  gap: 15px;
+}
+
+.filters select {
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+@media (max-width: 768px) {
+  .form-row {
+    flex-direction: column;
+  }
+  
+  .form-row input,
+  .form-row select {
+    min-width: auto;
+  }
+  
+  .report-controls {
+    flex-direction: column;
+  }
+  
+  table {
+    font-size: 12px;
+  }
+  
+  nav {
+    flex-direction: column;
+  }
+  
+  .route-buttons button {
+    width: 100%;
+    margin: 2px 0;
+  }
+}
