@@ -44,8 +44,10 @@
         <tr *ngFor="let supplier of suppliers">
           <td>{{supplier.name}}</td>
           <td>
-            <button (click)="editSupplier(supplier)">Update</button>
-            <button (click)="deleteSupplier(supplier.id)">Delete</button>
+            <div class="action-buttons">
+              <button class="btn-update btn-sm" (click)="editSupplier(supplier)">✏️ Update</button>
+              <button class="btn-delete btn-sm" (click)="deleteSupplier(supplier.id)">🗑️ Delete</button>
+            </div>
           </td>
         </tr>
       </tbody>
@@ -81,8 +83,10 @@
           <td>{{product.name}}</td>
           <td>{{product.crate_multiplier}}</td>
           <td>
-            <button (click)="editProduct(product)">Update</button>
-            <button (click)="deleteProduct(product.id)">Delete</button>
+            <div class="action-buttons">
+              <button class="btn-update btn-sm" (click)="editProduct(product)">✏️ Update</button>
+              <button class="btn-delete btn-sm" (click)="deleteProduct(product.id)">🗑️ Delete</button>
+            </div>
           </td>
         </tr>
       </tbody>
@@ -110,8 +114,10 @@
         <tr *ngFor="let route of routes">
           <td>{{route.name}}</td>
           <td>
-            <button (click)="editRoute(route)">Update</button>
-            <button (click)="deleteRoute(route.id)">Delete</button>
+            <div class="action-buttons">
+              <button class="btn-update btn-sm" (click)="editRoute(route)">✏️ Update</button>
+              <button class="btn-delete btn-sm" (click)="deleteRoute(route.id)">🗑️ Delete</button>
+            </div>
           </td>
         </tr>
       </tbody>
@@ -145,8 +151,10 @@
           <td>{{bp.route_name}}</td>
           <td>{{bp.name}}</td>
           <td>
-            <button (click)="editBusinessPoint(bp)">Update</button>
-            <button (click)="deleteBusinessPoint(bp.id)">Delete</button>
+            <div class="action-buttons">
+              <button class="btn-update btn-sm" (click)="editBusinessPoint(bp)">✏️ Update</button>
+              <button class="btn-delete btn-sm" (click)="deleteBusinessPoint(bp.id)">🗑️ Delete</button>
+            </div>
           </td>
         </tr>
       </tbody>
@@ -293,8 +301,10 @@
           <td>{{rate.product_name}}</td>
           <td>₹{{rate.rate}}</td>
           <td>
-            <button (click)="editRouteRate(rate)">Update</button>
-            <button (click)="deleteRouteRate(rate.id)">Delete</button>
+            <div class="action-buttons">
+              <button class="btn-update btn-sm" (click)="editRouteRate(rate)">✏️ Update</button>
+              <button class="btn-delete btn-sm" (click)="deleteRouteRate(rate.id)">🗑️ Delete</button>
+            </div>
           </td>
         </tr>
       </tbody>
@@ -333,8 +343,10 @@
           <td>{{rate.product_name}}</td>
           <td>₹{{rate.rate}}</td>
           <td>
-            <button (click)="editBusinessPointRate(rate)">Update</button>
-            <button (click)="deleteBusinessPointRate(rate.id)">Delete</button>
+            <div class="action-buttons">
+              <button class="btn-update btn-sm" (click)="editBusinessPointRate(rate)">✏️ Update</button>
+              <button class="btn-delete btn-sm" (click)="deleteBusinessPointRate(rate.id)">🗑️ Delete</button>
+            </div>
           </td>
         </tr>
       </tbody>

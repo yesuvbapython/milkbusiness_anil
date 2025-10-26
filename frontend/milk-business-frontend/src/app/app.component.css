@@ -9,8 +9,22 @@ header {
   margin-bottom: 30px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
-  padding: 20px;
-  border-radius: 10px;
+  padding: 25px;
+  border-radius: 15px;
+  box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="2" fill="rgba(255,255,255,0.1)"/><circle cx="80" cy="80" r="3" fill="rgba(255,255,255,0.1)"/><circle cx="40" cy="70" r="1" fill="rgba(255,255,255,0.1)"/></svg>');
+  opacity: 0.3;
 }
 
 .header-content {
@@ -21,25 +35,50 @@ header {
 
 .logo-section {
   text-align: left;
+  position: relative;
+  z-index: 1;
+}
+
+.logo-section h1 {
+  font-size: 2.2em;
+  font-weight: 700;
+  margin: 0;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.logo-section p {
+  margin: 8px 0 0 0;
+  opacity: 0.9;
+  font-size: 1.1em;
 }
 
 .user-section {
   display: flex;
   align-items: center;
+  position: relative;
+  z-index: 1;
 }
 
 .logout-btn {
-  padding: 10px 20px;
-  background: rgba(255,255,255,0.2);
+  padding: 12px 24px;
+  background: rgba(255,255,255,0.15);
   color: white;
-  border: 1px solid rgba(255,255,255,0.3);
-  border-radius: 5px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-radius: 25px;
   cursor: pointer;
-  transition: all 0.3s;
+  transition: all 0.3s ease;
+  font-weight: 600;
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .logout-btn:hover {
-  background: rgba(255,255,255,0.3);
+  background: rgba(255,255,255,0.25);
+  border-color: rgba(255,255,255,0.5);
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
 }
 
 header h1 {
@@ -61,22 +100,32 @@ nav {
 }
 
 nav button {
-  padding: 12px 20px;
+  padding: 14px 22px;
   border: none;
-  background: #f0f0f0;
+  background: white;
   cursor: pointer;
-  border-radius: 5px;
+  border-radius: 12px;
   font-size: 14px;
-  transition: all 0.3s;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  color: #333;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 nav button:hover {
-  background: #e0e0e0;
+  background: #f8f9fa;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.15);
 }
 
 nav button.active {
-  background: #667eea;
+  background: linear-gradient(135deg, #667eea, #764ba2);
   color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
 }
 
 .tab-content {
@@ -352,6 +401,70 @@ table tr:hover {
   border-radius: 4px;
 }
 
+/* Action Buttons */
+.action-buttons {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.btn-update {
+  padding: 8px 16px;
+  background: linear-gradient(135deg, #28a745, #20c997);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.btn-update:hover {
+  background: linear-gradient(135deg, #218838, #1ea080);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4);
+}
+
+.btn-delete {
+  padding: 8px 16px;
+  background: linear-gradient(135deg, #dc3545, #e74c3c);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.btn-delete:hover {
+  background: linear-gradient(135deg, #c82333, #dc2626);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(220, 53, 69, 0.4);
+}
+
+.btn-update:active,
+.btn-delete:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+/* Small action buttons for table cells */
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 11px;
+  min-width: 70px;
+}
+
 @media (max-width: 768px) {
   .form-row {
     flex-direction: column;
@@ -377,5 +490,16 @@ table tr:hover {
   .route-buttons button {
     width: 100%;
     margin: 2px 0;
+  }
+  
+  .action-buttons {
+    flex-direction: column;
+    gap: 4px;
+  }
+  
+  .btn-update,
+  .btn-delete {
+    width: 100%;
+    justify-content: center;
   }
 }
