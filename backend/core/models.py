@@ -10,6 +10,8 @@ class Route(models.Model):
 class BusinessPoint(models.Model):
     route = models.ForeignKey(Route, on_delete=models.CASCADE)
     name = models.CharField(max_length=100)  # Shekara, Agent M4, etc.
+    email = models.EmailField(blank=True, null=True)
+    phone = models.CharField(max_length=15, blank=True, null=True)
     
     def __str__(self):
         return f"{self.route.name} - {self.name}"

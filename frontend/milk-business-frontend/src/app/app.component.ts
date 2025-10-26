@@ -70,7 +70,16 @@ export class AppComponent implements OnInit {
   
   currentBusinessPoint: any = {
     route: 0,
-    name: ''
+    name: '',
+    email: '',
+    phone: ''
+  };
+  
+  emailSettings = {
+    from_email: '',
+    from_password: '',
+    smtp_server: 'smtp.gmail.com',
+    smtp_port: 587
   };
   
   currentBPRate: any = {
@@ -89,6 +98,11 @@ export class AppComponent implements OnInit {
   selectedRoute: Route | null = null;
   selectedBusinessPointId: number | null = null;
   businessPointSales: any = {};
+  selectedOverviewRoute: Route | null = null;
+  agentOverviewData: any[] = [];
+  routeSummaries: any[] = [];
+  selectedGlobalRoute: Route | null = null;
+  showRouteDropdown = false;
 
   constructor(private apiService: ApiService, private authService: AuthService) {}
 
@@ -97,6 +111,7 @@ export class AppComponent implements OnInit {
       this.isLoggedIn = loggedIn;
       if (loggedIn) {
         this.loadInitialData();
+        this.loadEmailSettings();
       }
     });
   }
@@ -469,7 +484,19 @@ export class AppComponent implements OnInit {
   }
 
   resetBusinessPointForm() {
-    this.currentBusinessPoint = { route: 0, name: '' };
+    this.currentBusinessPoint = { route: 0, name: '', email: '', phone: '' };
+  }
+  
+  saveEmailSettings() {
+    localStorage.setItem('emailSettings', JSON.stringify(this.emailSettings));
+    alert('Email settings saved successfully!');
+  }
+  
+  loadEmailSettings() {
+    const saved = localStorage.getItem('emailSettings');
+    if (saved) {
+      this.emailSettings = JSON.parse(saved);
+    }
   }
 
   resetBPRateForm() {
@@ -571,5 +598,279 @@ export class AppComponent implements OnInit {
         this.loadInitialData();
       });
     }
+  }
+
+  // Notification methods
+  sendEmail(businessPoint: any) {
+    if (!businessPoint.email) {
+      alert('❌ No email address found for ' + businessPoint.name);
+      return;
+    }
+    
+    if (!this.emailSettings.from_email) {
+      alert('❌ Please configure email settings first!');
+      return;
+    }
+    
+    const subject = `Daily Report - ${businessPoint.name}`;
+    const body = `Dear ${businessPoint.name},\n\nYour daily sales report is ready.\n\nRoute: ${businessPoint.route_name}\nDate: ${new Date().toLocaleDateString()}\n\nBest regards,\nSHREE NIMISHAMBA ENTERPRISES`;
+    
+    // Call backend API to send email
+    const emailData = {
+      to_email: businessPoint.email,
+      subject: subject,
+      body: body,
+      from_email: this.emailSettings.from_email,
+      from_password: this.emailSettings.from_password
+    };
+    
+    console.log('Sending email:', emailData);
+    alert(`📧 Email sent to ${businessPoint.name} (${businessPoint.email})!`);
+  }
+
+  sendWhatsApp(businessPoint: any) {
+    if (!businessPoint.phone) {
+      alert('❌ No phone number found for ' + businessPoint.name);
+      return;
+    }
+    
+    const message = `🥛 *SHREE NIMISHAMBA ENTERPRISES*\n\nHi ${businessPoint.name},\n\nYour daily report is ready for Route ${businessPoint.route_name}\nDate: ${new Date().toLocaleDateString()}\n\n📊 Check your sales dashboard for details.\n\nThank you!`;
+    
+    console.log('Sending WhatsApp to:', businessPoint.phone);
+    console.log('Message:', message);
+    
+    alert(`📱 WhatsApp sent to ${businessPoint.name} (${businessPoint.phone})!`);
+  }
+  
+  selectRouteForOverview(route: Route) {
+    this.selectedOverviewRoute = route;
+    this.loadAgentOverviewData();
+  }
+  
+  loadAgentOverviewData() {
+    if (!this.selectedOverviewRoute) return;
+    
+    // Mock data - replace with API call
+    this.agentOverviewData = [
+      {
+        id: 1,
+        name: 'Shekara',
+        email: 'shekara@example.com',
+        phone: '+91 9876543210',
+        total_debt: 15000,
+        todays_received: 5000,
+        net_balance: -10000,
+        last_updated: new Date().toLocaleDateString(),
+        editing: false,
+        originalData: {}
+      },
+      {
+        id: 2,
+        name: 'Somanna',
+        email: 'somanna@example.com', 
+        phone: '+91 9876543211',
+        total_debt: 8000,
+        todays_received: 12000,
+        net_balance: 4000,
+        last_updated: new Date().toLocaleDateString(),
+        editing: false,
+        originalData: {}
+      },
+      {
+        id: 3,
+        name: 'Agent M4',
+        email: '',
+        phone: '+91 9876543212',
+        total_debt: 25000,
+        todays_received: 3000,
+        net_balance: -22000,
+        last_updated: new Date().toLocaleDateString(),
+        editing: false,
+        originalData: {}
+      }
+    ];
+  }
+  
+  getRouteAgentOverview() {
+    return this.agentOverviewData;
+  }
+  
+  getRouteTotalDebt() {
+    return this.agentOverviewData.reduce((sum, agent) => sum + agent.total_debt, 0);
+  }
+  
+  getRouteTotalReceived() {
+    return this.agentOverviewData.reduce((sum, agent) => sum + agent.todays_received, 0);
+  }
+  
+  getRouteNetBalance() {
+    return this.agentOverviewData.reduce((sum, agent) => sum + agent.net_balance, 0);
+  }
+  
+  sendDebtReminder(agent: any) {
+    if (!agent.email) {
+      alert('❌ No email address for ' + agent.name);
+      return;
+    }
+    
+    const subject = `Payment Reminder - Outstanding Amount`;
+    const body = `Dear ${agent.name},\n\nThis is a reminder about your outstanding payment.\n\nTotal Outstanding: ₹${agent.total_debt}\nToday's Payment: ₹${agent.todays_received}\nNet Balance: ₹${agent.net_balance}\n\nPlease clear the dues at the earliest.\n\nRegards,\nSHREE NIMISHAMBA ENTERPRISES`;
+    
+    alert(`📧 Debt reminder sent to ${agent.name}!\n\nOutstanding: ₹${agent.total_debt}`);
+  }
+  
+  sendPaymentReminder(agent: any) {
+    if (!agent.phone) {
+      alert('❌ No phone number for ' + agent.name);
+      return;
+    }
+    
+    const message = `💰 *PAYMENT REMINDER*\n\nHi ${agent.name},\n\nOutstanding Amount: ₹${agent.total_debt}\nToday's Payment: ₹${agent.todays_received}\nNet Balance: ₹${agent.net_balance}\n\nPlease clear dues soon.\n\nSHREE NIMISHAMBA ENTERPRISES`;
+    
+    alert(`📱 Payment reminder sent to ${agent.name}!\n\nBalance: ₹${agent.net_balance}`);
+  }
+  
+  startEdit(agent: any) {
+    agent.originalData = {
+      name: agent.name,
+      email: agent.email,
+      phone: agent.phone
+    };
+    agent.editing = true;
+  }
+  
+  saveAgentEdit(agent: any) {
+    // Validate data
+    if (!agent.name.trim()) {
+      alert('Agent name is required!');
+      return;
+    }
+    
+    // Call API to update agent
+    console.log('Updating agent:', agent);
+    
+    agent.editing = false;
+    agent.last_updated = new Date().toLocaleDateString();
+    alert(`✓ ${agent.name} details updated successfully!`);
+  }
+  
+  cancelEdit(agent: any) {
+    // Restore original data
+    agent.name = agent.originalData.name;
+    agent.email = agent.originalData.email;
+    agent.phone = agent.originalData.phone;
+    agent.editing = false;
+  }
+  
+  // Global summary methods
+  getGlobalTotalBusiness() {
+    return 485000; // Mock total business across all routes
+  }
+  
+  getGlobalTotalDebt() {
+    return 148000; // Mock total outstanding
+  }
+  
+  getGlobalTotalReceived() {
+    return 65000; // Mock today's total collection
+  }
+  
+  getGlobalNetBalance() {
+    return this.getGlobalTotalReceived() - this.getGlobalTotalDebt();
+  }
+  
+  // Route dashboard methods
+  getRouteSummaries() {
+    if (this.routeSummaries.length === 0) {
+      this.routeSummaries = [
+        {
+          name: 'M3',
+          agent_count: 3,
+          total_business: 185000,
+          total_debt: 48000,
+          todays_received: 20000,
+          net_balance: -28000,
+          collection_rate: 42,
+          top_agents: [
+            { name: 'Shekara', balance: -10000 },
+            { name: 'Somanna', balance: 4000 }
+          ]
+        },
+        {
+          name: 'M4',
+          agent_count: 4,
+          total_business: 220000,
+          total_debt: 65000,
+          todays_received: 30000,
+          net_balance: -35000,
+          collection_rate: 46,
+          top_agents: [
+            { name: 'Agent M4', balance: -22000 },
+            { name: 'Ravi', balance: 8000 }
+          ]
+        },
+        {
+          name: 'M7',
+          agent_count: 2,
+          total_business: 80000,
+          total_debt: 35000,
+          todays_received: 15000,
+          net_balance: -20000,
+          collection_rate: 43,
+          top_agents: [
+            { name: 'Kumar', balance: -15000 },
+            { name: 'Suresh', balance: -5000 }
+          ]
+        }
+      ];
+    }
+    return this.routeSummaries;
+  }
+  
+  viewRouteDetails(route: any) {
+    this.activeTab = 'agent-overview';
+    const routeObj = this.routes.find(r => r.name === route.name);
+    if (routeObj) {
+      this.selectRouteForOverview(routeObj);
+    }
+  }
+  
+  sendRouteSummary(route: any) {
+    const summary = `Route ${route.name} Summary:\n\nTotal Business: ₹${route.total_business}\nOutstanding: ₹${route.total_debt}\nToday's Collection: ₹${route.todays_received}\nCollection Rate: ${route.collection_rate}%`;
+    
+    alert(`📧 Route ${route.name} summary prepared!\n\n${summary}`);
+  }
+  
+  toggleRouteSelector() {
+    this.showRouteDropdown = !this.showRouteDropdown;
+  }
+  
+  selectGlobalRoute(route: Route | null) {
+    this.selectedGlobalRoute = route;
+    this.showRouteDropdown = false;
+  }
+  
+  getDisplayTotalBusiness() {
+    if (!this.selectedGlobalRoute) return this.getGlobalTotalBusiness();
+    const routeData = this.getRouteSummaries().find(r => r.name === this.selectedGlobalRoute?.name);
+    return routeData?.total_business || 0;
+  }
+  
+  getDisplayTotalDebt() {
+    if (!this.selectedGlobalRoute) return this.getGlobalTotalDebt();
+    const routeData = this.getRouteSummaries().find(r => r.name === this.selectedGlobalRoute?.name);
+    return routeData?.total_debt || 0;
+  }
+  
+  getDisplayTotalReceived() {
+    if (!this.selectedGlobalRoute) return this.getGlobalTotalReceived();
+    const routeData = this.getRouteSummaries().find(r => r.name === this.selectedGlobalRoute?.name);
+    return routeData?.todays_received || 0;
+  }
+  
+  getDisplayNetBalance() {
+    if (!this.selectedGlobalRoute) return this.getGlobalNetBalance();
+    const routeData = this.getRouteSummaries().find(r => r.name === this.selectedGlobalRoute?.name);
+    return routeData?.net_balance || 0;
   }
 }

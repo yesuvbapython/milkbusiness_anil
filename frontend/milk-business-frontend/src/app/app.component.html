@@ -21,7 +21,48 @@
     <button (click)="activeTab = 'rates'" [class.active]="activeTab === 'rates'">💰 Rates</button>
     <button (click)="activeTab = 'sales'" [class.active]="activeTab === 'sales'">📊 Daily Sales</button>
     <button (click)="activeTab = 'reports'" [class.active]="activeTab === 'reports'">📈 Reports</button>
+    <button (click)="activeTab = 'settings'" [class.active]="activeTab === 'settings'">⚙️ Settings</button>
+    <button (click)="activeTab = 'agent-overview'" [class.active]="activeTab === 'agent-overview'">📅 Agent Overview</button>
+    <button (click)="activeTab = 'route-dashboard'" [class.active]="activeTab === 'route-dashboard'">📊 Route Dashboard</button>
   </nav>
+
+  <!-- Global Route Summary - Always Visible -->
+  <div *ngIf="isLoggedIn" class="global-summary">
+    <div class="summary-header">
+      <h3>{{selectedGlobalRoute ? selectedGlobalRoute.name + ' Route Summary' : '🌍 All Routes Summary'}}</h3>
+      <div class="route-selector">
+        <button class="route-toggle" (click)="toggleRouteSelector()">
+          {{selectedGlobalRoute ? selectedGlobalRoute.name : 'All Routes'}} ▼
+        </button>
+        <div *ngIf="showRouteDropdown" class="route-dropdown">
+          <button (click)="selectGlobalRoute(null)" [class.active]="!selectedGlobalRoute">🌍 All Routes</button>
+          <button *ngFor="let route of routes" 
+                  (click)="selectGlobalRoute(route)" 
+                  [class.active]="selectedGlobalRoute?.id === route.id">
+            {{route.name}} Route
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="global-summary-cards">
+      <div class="global-card total">
+        <label>Total Business</label>
+        <span>₹{{getDisplayTotalBusiness()}}</span>
+      </div>
+      <div class="global-card debt">
+        <label>Total Outstanding</label>
+        <span>₹{{getDisplayTotalDebt()}}</span>
+      </div>
+      <div class="global-card received">
+        <label>Today's Collection</label>
+        <span>₹{{getDisplayTotalReceived()}}</span>
+      </div>
+      <div class="global-card balance">
+        <label>Net Balance</label>
+        <span>₹{{getDisplayNetBalance()}}</span>
+      </div>
+    </div>
+  </div>
 
   <!-- Suppliers Tab -->
   <div *ngIf="activeTab === 'suppliers'" class="tab-content">
@@ -134,6 +175,8 @@
           <option *ngFor="let route of routes" [value]="route.id">{{route.name}}</option>
         </select>
         <input type="text" [(ngModel)]="currentBusinessPoint.name" name="name" placeholder="Agent Name (Shekara, Agent M4...)" required>
+        <input type="email" [(ngModel)]="currentBusinessPoint.email" name="email" placeholder="Email Address" required>
+        <input type="tel" [(ngModel)]="currentBusinessPoint.phone" name="phone" placeholder="Phone Number" required>
         <button type="submit">Add Agent</button>
       </div>
     </form>
@@ -143,6 +186,8 @@
         <tr>
           <th>Route</th>
           <th>Agent Name</th>
+          <th>Email</th>
+          <th>Phone</th>
           <th>Actions</th>
         </tr>
       </thead>
@@ -150,10 +195,16 @@
         <tr *ngFor="let bp of businessPoints">
           <td>{{bp.route_name}}</td>
           <td>{{bp.name}}</td>
+          <td>{{bp.email || 'Not set'}}</td>
+          <td>{{bp.phone || 'Not set'}}</td>
           <td>
             <div class="action-buttons">
               <button class="btn-update btn-sm" (click)="editBusinessPoint(bp)">✏️ Update</button>
               <button class="btn-delete btn-sm" (click)="deleteBusinessPoint(bp.id)">🗑️ Delete</button>
+            </div>
+            <div class="notification-buttons">
+              <button class="btn-email btn-sm" (click)="sendEmail(bp)">📧 Email</button>
+              <button class="btn-whatsapp btn-sm" (click)="sendWhatsApp(bp)">📱 WhatsApp</button>
             </div>
           </td>
         </tr>
@@ -220,7 +271,13 @@
       <div class="business-point-sales">
         <h4>Business Point Sales</h4>
         <div *ngFor="let bp of getRouteBusinessPoints()" class="bp-card">
-          <h5>{{bp.name}}</h5>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h5>{{bp.name}}</h5>
+            <div class="notification-buttons">
+              <button class="btn-email btn-sm" (click)="sendEmail(bp)">📧 Email</button>
+              <button class="btn-whatsapp btn-sm" (click)="sendWhatsApp(bp)">📱 WhatsApp</button>
+            </div>
+          </div>
           <form (ngSubmit)="saveBusinessPointSales(bp)" #bpSalesForm="ngForm">
             <div class="form-row">
               <input type="date" [(ngModel)]="getBPSales(bp).date" name="date_{{bp.id}}" required>
@@ -432,6 +489,7 @@
               <th>Received Amount</th>
               <th>Net Balance</th>
               <th>Total Liters</th>
+              <th>Notifications</th>
             </tr>
           </thead>
           <tbody>
@@ -444,6 +502,12 @@
               <td>₹{{item.received_amount}}</td>
               <td>₹{{item.net_balance}}</td>
               <td>{{item.total_liters}}L</td>
+              <td>
+                <div class="notification-buttons">
+                  <button class="btn-email btn-sm" (click)="sendEmail({name: item.agent, route_name: item.route})">📧</button>
+                  <button class="btn-whatsapp btn-sm" (click)="sendWhatsApp({name: item.agent, route_name: item.route})">📱</button>
+                </div>
+              </td>
             </tr>
           </tbody>
         </table>
@@ -461,6 +525,7 @@
               <th>Received Amount</th>
               <th>Net Balance</th>
               <th>Total Liters</th>
+              <th>Notifications</th>
             </tr>
           </thead>
           <tbody>
@@ -473,6 +538,12 @@
               <td>₹{{item.received_amount}}</td>
               <td>₹{{item.net_balance}}</td>
               <td>{{item.total_liters}}L</td>
+              <td>
+                <div class="notification-buttons">
+                  <button class="btn-email btn-sm" (click)="sendEmail({name: item.business_point, route_name: item.route})">📧</button>
+                  <button class="btn-whatsapp btn-sm" (click)="sendWhatsApp({name: item.business_point, route_name: item.route})">📱</button>
+                </div>
+              </td>
             </tr>
           </tbody>
         </table>
@@ -513,6 +584,186 @@
         <div class="balance-item total">
           <label>Total Closing Balance:</label>
           <span>₹{{reportData.total_closing_balance}}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings Tab -->
+  <div *ngIf="activeTab === 'settings'" class="tab-content">
+    <h2>Email Configuration</h2>
+    <form (ngSubmit)="saveEmailSettings()" #settingsForm="ngForm">
+      <div class="form-row">
+        <div class="form-field">
+          <label>From Email:</label>
+          <input type="email" [(ngModel)]="emailSettings.from_email" name="from_email" placeholder="your-email@gmail.com" required>
+        </div>
+        <div class="form-field">
+          <label>Email Password:</label>
+          <input type="password" [(ngModel)]="emailSettings.from_password" name="from_password" placeholder="App Password" required>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label>SMTP Server:</label>
+          <input type="text" [(ngModel)]="emailSettings.smtp_server" name="smtp_server" value="smtp.gmail.com" readonly>
+        </div>
+        <div class="form-field">
+          <label>SMTP Port:</label>
+          <input type="number" [(ngModel)]="emailSettings.smtp_port" name="smtp_port" value="587" readonly>
+        </div>
+      </div>
+      <div class="form-row">
+        <button type="submit">💾 Save Email Settings</button>
+      </div>
+    </form>
+    
+    <div style="margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 8px;">
+      <h4>📝 Setup Instructions:</h4>
+      <ol>
+        <li>Use Gmail account for sending emails</li>
+        <li>Enable 2-Factor Authentication in Gmail</li>
+        <li>Generate App Password: Google Account → Security → App passwords</li>
+        <li>Use the App Password (not your regular password)</li>
+        <li>Enter your Gmail and App Password above</li>
+      </ol>
+    </div>
+  </div>
+
+  <!-- Agent Overview Tab -->
+  <div *ngIf="activeTab === 'agent-overview'" class="tab-content">
+    <h2>Agent Overview by Route</h2>
+    
+    <!-- Route Selection -->
+    <div class="route-buttons">
+      <h3>Select Route:</h3>
+      <button *ngFor="let route of routes" 
+              (click)="selectRouteForOverview(route)" 
+              [class.active]="selectedOverviewRoute?.id === route.id">
+        {{route.name}}
+      </button>
+    </div>
+
+    <div *ngIf="selectedOverviewRoute" class="agent-overview-section">
+      <h3>{{selectedOverviewRoute.name}} Route - Agent Details</h3>
+      
+      <table>
+        <thead>
+          <tr>
+            <th>Agent Name</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Total Debt</th>
+            <th>Today's Received</th>
+            <th>Net Balance</th>
+            <th>Last Updated</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let agent of getRouteAgentOverview(); let i = index">
+            <td>
+              <input *ngIf="agent.editing" type="text" [(ngModel)]="agent.name" class="edit-input" (blur)="saveAgentEdit(agent)" (keyup.enter)="saveAgentEdit(agent)">
+              <strong *ngIf="!agent.editing" (click)="startEdit(agent)">{{agent.name}} ✏️</strong>
+            </td>
+            <td>
+              <input *ngIf="agent.editing" type="email" [(ngModel)]="agent.email" class="edit-input" placeholder="Email">
+              <span *ngIf="!agent.editing" (click)="startEdit(agent)">{{agent.email || 'Click to add'}} ✏️</span>
+            </td>
+            <td>
+              <input *ngIf="agent.editing" type="tel" [(ngModel)]="agent.phone" class="edit-input" placeholder="Phone">
+              <span *ngIf="!agent.editing" (click)="startEdit(agent)">{{agent.phone || 'Click to add'}} ✏️</span>
+            </td>
+            <td class="debt-amount">₹{{agent.total_debt}}</td>
+            <td class="received-amount">₹{{agent.todays_received}}</td>
+            <td [class]="agent.net_balance >= 0 ? 'positive-balance' : 'negative-balance'">
+              ₹{{agent.net_balance}}
+            </td>
+            <td>{{agent.last_updated}}</td>
+            <td>
+              <div *ngIf="agent.editing" class="edit-actions">
+                <button class="btn-update btn-sm" (click)="saveAgentEdit(agent)">✓ Save</button>
+                <button class="btn-delete btn-sm" (click)="cancelEdit(agent)">✗ Cancel</button>
+              </div>
+              <div *ngIf="!agent.editing" class="notification-buttons">
+                <button class="btn-email btn-sm" (click)="sendDebtReminder(agent)">📧 Debt</button>
+                <button class="btn-whatsapp btn-sm" (click)="sendPaymentReminder(agent)">📱 Pay</button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      
+      <div class="route-summary">
+        <h4>Route Summary</h4>
+        <div class="summary-cards">
+          <div class="summary-card debt">
+            <label>Total Route Debt:</label>
+            <span>₹{{getRouteTotalDebt()}}</span>
+          </div>
+          <div class="summary-card received">
+            <label>Today's Total Received:</label>
+            <span>₹{{getRouteTotalReceived()}}</span>
+          </div>
+          <div class="summary-card balance">
+            <label>Route Net Balance:</label>
+            <span>₹{{getRouteNetBalance()}}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Route Dashboard Tab -->
+  <div *ngIf="activeTab === 'route-dashboard'" class="tab-content">
+    <h2>Route Performance Dashboard</h2>
+    
+    <div class="route-dashboard">
+      <div *ngFor="let route of getRouteSummaries()" class="route-card">
+        <div class="route-header">
+          <h4>{{route.name}} Route</h4>
+          <span class="agent-count">{{route.agent_count}} Agents</span>
+        </div>
+        
+        <div class="route-metrics">
+          <div class="metric">
+            <label>Total Business</label>
+            <span class="business-amount">₹{{route.total_business}}</span>
+          </div>
+          <div class="metric">
+            <label>Outstanding</label>
+            <span class="debt-amount">₹{{route.total_debt}}</span>
+          </div>
+          <div class="metric">
+            <label>Today's Collection</label>
+            <span class="received-amount">₹{{route.todays_received}}</span>
+          </div>
+          <div class="metric">
+            <label>Net Balance</label>
+            <span [class]="route.net_balance >= 0 ? 'positive-balance' : 'negative-balance'">₹{{route.net_balance}}</span>
+          </div>
+        </div>
+        
+        <div class="route-progress">
+          <label>Collection Rate: {{route.collection_rate}}%</label>
+          <div class="progress-bar">
+            <div class="progress-fill" [style.width.%]="route.collection_rate"></div>
+          </div>
+        </div>
+        
+        <div class="route-agents">
+          <h5>Top Performers</h5>
+          <div class="agent-list">
+            <div *ngFor="let agent of route.top_agents" class="agent-item">
+              <span class="agent-name">{{agent.name}}</span>
+              <span [class]="agent.balance >= 0 ? 'positive-balance' : 'negative-balance'">₹{{agent.balance}}</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="route-actions">
+          <button class="btn-update btn-sm" (click)="viewRouteDetails(route)">🔍 View Details</button>
+          <button class="btn-email btn-sm" (click)="sendRouteSummary(route)">📧 Email Summary</button>
         </div>
       </div>
     </div>
