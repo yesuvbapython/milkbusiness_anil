@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Route, Supplier, Product, RouteRate, DailySales, AgentCashFlow, BankCashFlow } from '../models/models';
+import { Route, Supplier, Product, RouteRate, DailySales, AgentCashFlow, BankCashFlow, Production } from '../models/models';
 
 @Injectable({
   providedIn: 'root'
@@ -168,5 +168,58 @@ export class ApiService {
   getCashClosingBalance(date?: string): Observable<any> {
     let params = date ? `date=${date}` : '';
     return this.http.get<any>(`${this.baseUrl}/bank-cashflow/cash_closing_balance/?${params}`);
+  }
+
+  // Production methods
+  getProductions(): Observable<Production[]> {
+    return this.http.get<Production[]>(`${this.baseUrl}/production/`);
+  }
+
+  createProduction(production: Production): Observable<Production> {
+    return this.http.post<Production>(`${this.baseUrl}/production/`, production);
+  }
+
+  updateProduction(id: number, production: Production): Observable<Production> {
+    return this.http.put<Production>(`${this.baseUrl}/production/${id}/`, production);
+  }
+
+  deleteProduction(id: number): Observable<any> {
+    return this.http.delete(`${this.baseUrl}/production/${id}/`);
+  }
+
+  getProductionSummary(date?: string, routeId?: number): Observable<any[]> {
+    let params = '';
+    if (date) params += `date=${date}&`;
+    if (routeId) params += `route_id=${routeId}&`;
+    return this.http.get<any[]>(`${this.baseUrl}/production/production_summary/?${params}`);
+  }
+
+  // Enhanced sales methods
+  deleteDailySales(id: number): Observable<any> {
+    return this.http.delete(`${this.baseUrl}/daily-sales/${id}/`);
+  }
+
+  // Business Point Daily Sales
+  getBusinessPointDailySales(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.baseUrl}/business-point-daily-sales/`);
+  }
+
+  createBusinessPointDailySales(sales: any): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/business-point-daily-sales/`, sales);
+  }
+
+  updateBusinessPointDailySales(id: number, sales: any): Observable<any> {
+    return this.http.put<any>(`${this.baseUrl}/business-point-daily-sales/${id}/`, sales);
+  }
+
+  deleteBusinessPointDailySales(id: number): Observable<any> {
+    return this.http.delete(`${this.baseUrl}/business-point-daily-sales/${id}/`);
+  }
+
+  getBusinessPointCashBalanceReport(date?: string, businessPointId?: number): Observable<any[]> {
+    let params = '';
+    if (date) params += `date=${date}&`;
+    if (businessPointId) params += `business_point_id=${businessPointId}&`;
+    return this.http.get<any[]>(`${this.baseUrl}/business-point-daily-sales/cash_balance_report/?${params}`);
   }
 }

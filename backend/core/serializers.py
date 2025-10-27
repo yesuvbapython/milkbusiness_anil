@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from .models import (Route, BusinessPoint, Supplier, Product, RouteRate, BusinessPointRate,
                     CrateDistribution, BusinessPointCrateDistribution, DailySales, 
-                    BusinessPointDailySales, AgentCashFlow, BankCashFlow)
+                    BusinessPointDailySales, AgentCashFlow, BankCashFlow, Production)
 
 class RouteSerializer(serializers.ModelSerializer):
     class Meta:
@@ -99,4 +99,16 @@ class BankCashFlowSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = BankCashFlow
+        fields = '__all__'
+
+class ProductionSerializer(serializers.ModelSerializer):
+    route_name = serializers.CharField(source='route.name', read_only=True)
+    supplier_name = serializers.CharField(source='supplier.name', read_only=True)
+    product_name = serializers.CharField(source='product.name', read_only=True)
+    total_units_produced = serializers.IntegerField(read_only=True)
+    total_units_distributed = serializers.IntegerField(read_only=True)
+    total_units_remaining = serializers.IntegerField(read_only=True)
+    
+    class Meta:
+        model = Production
         fields = '__all__'

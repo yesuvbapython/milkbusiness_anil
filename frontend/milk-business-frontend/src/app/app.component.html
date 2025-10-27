@@ -18,6 +18,7 @@
     <button (click)="activeTab = 'products'" [class.active]="activeTab === 'products'">📦 Products</button>
     <button (click)="activeTab = 'routes'" [class.active]="activeTab === 'routes'">🚛 Routes</button>
     <button (click)="activeTab = 'business-points'" [class.active]="activeTab === 'business-points'">🏢 Business Points</button>
+    <button (click)="activeTab = 'production'" [class.active]="activeTab === 'production'">🏭 Production</button>
     <button (click)="activeTab = 'rates'" [class.active]="activeTab === 'rates'">💰 Rates</button>
     <button (click)="activeTab = 'sales'" [class.active]="activeTab === 'sales'">📊 Daily Sales</button>
     <button (click)="activeTab = 'reports'" [class.active]="activeTab === 'reports'">📈 Reports</button>
@@ -198,13 +199,98 @@
           <td>{{bp.email || 'Not set'}}</td>
           <td>{{bp.phone || 'Not set'}}</td>
           <td>
-            <div class="action-buttons">
+            <div class="action-buttons-horizontal">
               <button class="btn-update btn-sm" (click)="editBusinessPoint(bp)">✏️ Update</button>
               <button class="btn-delete btn-sm" (click)="deleteBusinessPoint(bp.id)">🗑️ Delete</button>
-            </div>
-            <div class="notification-buttons">
               <button class="btn-email btn-sm" (click)="sendEmail(bp)">📧 Email</button>
               <button class="btn-whatsapp btn-sm" (click)="sendWhatsApp(bp)">📱 WhatsApp</button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Production Tab -->
+  <div *ngIf="activeTab === 'production'" class="tab-content">
+    <h2>Production Management</h2>
+    <form (ngSubmit)="saveProduction()" #productionForm="ngForm">
+      <div class="form-row">
+        <div class="form-field">
+          <label>Route:</label>
+          <select [(ngModel)]="currentProduction.route" name="route" required>
+            <option value="">Select Route</option>
+            <option *ngFor="let route of routes" [value]="route.id">{{route.name}}</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label>Supplier:</label>
+          <select [(ngModel)]="currentProduction.supplier" name="supplier" required>
+            <option value="">Select Supplier</option>
+            <option *ngFor="let supplier of suppliers" [value]="supplier.id">{{supplier.name}}</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label>Product:</label>
+          <select [(ngModel)]="currentProduction.product" name="product" required>
+            <option value="">Select Product</option>
+            <option *ngFor="let product of products" [value]="product.id">{{product.supplier_name}} - {{product.name}}</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label>Date:</label>
+          <input type="date" [(ngModel)]="currentProduction.date" name="date" required>
+        </div>
+        <div class="form-field">
+          <label>Crates Produced:</label>
+          <input type="number" [(ngModel)]="currentProduction.crates_produced" name="crates_produced" min="0" required>
+        </div>
+        <div class="form-field">
+          <label>Crates Distributed:</label>
+          <input type="number" [(ngModel)]="currentProduction.crates_distributed" name="crates_distributed" min="0" required>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-field full-width">
+          <label>Notes:</label>
+          <textarea [(ngModel)]="currentProduction.notes" name="notes" placeholder="Additional notes..."></textarea>
+        </div>
+      </div>
+      <div class="form-row">
+        <button type="submit">{{currentProduction.id ? 'Update' : 'Add'}} Production</button>
+      </div>
+    </form>
+    
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Route</th>
+          <th>Supplier</th>
+          <th>Product</th>
+          <th>Produced</th>
+          <th>Distributed</th>
+          <th>Remaining</th>
+          <th>Units (Produced/Distributed/Remaining)</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let production of productions">
+          <td>{{production.date}}</td>
+          <td>{{production.route_name}}</td>
+          <td>{{production.supplier_name}}</td>
+          <td>{{production.product_name}}</td>
+          <td>{{production.crates_produced}} crates</td>
+          <td>{{production.crates_distributed}} crates</td>
+          <td>{{production.crates_remaining}} crates</td>
+          <td>{{production.total_units_produced}}/{{production.total_units_distributed}}/{{production.total_units_remaining}} units</td>
+          <td>
+            <div class="action-buttons-horizontal">
+              <button class="btn-update btn-sm" (click)="editProduction(production)">✏️ Update</button>
+              <button class="btn-delete btn-sm" (click)="deleteProduction(production.id)">🗑️ Delete</button>
             </div>
           </td>
         </tr>
@@ -262,9 +348,44 @@
             </div>
           </div>
           <div class="form-row">
-            <button type="submit">Save Route Sales</button>
+            <button type="submit">{{currentSales.id ? 'Update' : 'Save'}} Route Sales</button>
+            <button *ngIf="currentSales.id" type="button" class="btn-delete" (click)="deleteRouteSales()">Delete Sales</button>
           </div>
         </form>
+        
+        <!-- Display existing route sales -->
+        <div *ngIf="getRouteSales().length > 0" class="existing-sales">
+          <h5>Existing Sales Records</h5>
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Opening Balance</th>
+                <th>Sales Amount</th>
+                <th>Received Amount</th>
+                <th>Deductions</th>
+                <th>Net Balance</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let sale of getRouteSales()">
+                <td>{{sale.date}}</td>
+                <td>₹{{sale.opening_balance}}</td>
+                <td>₹{{sale.sales_amount}}</td>
+                <td>₹{{sale.received_amount}}</td>
+                <td>₹{{sale.other_deductions}}</td>
+                <td>₹{{sale.net_balance}}</td>
+                <td>
+                  <div class="action-buttons-horizontal">
+                    <button class="btn-update btn-sm" (click)="editRouteSales(sale)">✏️ Edit</button>
+                    <button class="btn-delete btn-sm" (click)="deleteRouteSalesById(sale.id)">🗑️ Delete</button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <!-- Business Point Sales -->
@@ -280,17 +401,70 @@
           </div>
           <form (ngSubmit)="saveBusinessPointSales(bp)" #bpSalesForm="ngForm">
             <div class="form-row">
-              <input type="date" [(ngModel)]="getBPSales(bp).date" name="date_{{bp.id}}" required>
-              <input type="number" [(ngModel)]="getBPSales(bp).opening_balance" name="opening_{{bp.id}}" placeholder="Opening Balance" step="0.01">
-              <input type="number" [(ngModel)]="getBPSales(bp).sales_amount" name="sales_{{bp.id}}" placeholder="Sales Amount" step="0.01">
+              <div class="form-field">
+                <label>Date:</label>
+                <input type="date" [(ngModel)]="getBPSales(bp).date" name="date_{{bp.id}}" required>
+              </div>
+              <div class="form-field">
+                <label>Opening Balance:</label>
+                <input type="number" [(ngModel)]="getBPSales(bp).opening_balance" name="opening_{{bp.id}}" step="0.01">
+              </div>
+              <div class="form-field">
+                <label>Sales Amount:</label>
+                <input type="number" [(ngModel)]="getBPSales(bp).sales_amount" name="sales_{{bp.id}}" step="0.01">
+              </div>
             </div>
             <div class="form-row">
-              <input type="number" [(ngModel)]="getBPSales(bp).received_amount" name="received_{{bp.id}}" placeholder="Received Amount" step="0.01">
-              <input type="number" [(ngModel)]="getBPSales(bp).other_deductions" name="deductions_{{bp.id}}" placeholder="Deductions" step="0.01">
-              <input type="number" [(ngModel)]="getBPSales(bp).total_liters" name="liters_{{bp.id}}" placeholder="Liters" step="0.01">
-              <button type="submit">Save {{bp.name}} Sales</button>
+              <div class="form-field">
+                <label>Received Amount:</label>
+                <input type="number" [(ngModel)]="getBPSales(bp).received_amount" name="received_{{bp.id}}" step="0.01">
+              </div>
+              <div class="form-field">
+                <label>Deductions:</label>
+                <input type="number" [(ngModel)]="getBPSales(bp).other_deductions" name="deductions_{{bp.id}}" step="0.01">
+              </div>
+              <div class="form-field">
+                <label>Total Liters:</label>
+                <input type="number" [(ngModel)]="getBPSales(bp).total_liters" name="liters_{{bp.id}}" step="0.01">
+              </div>
+            </div>
+            <div class="form-row">
+              <button type="submit">{{getBPSales(bp).id ? 'Update' : 'Save'}} {{bp.name}} Sales</button>
+              <button *ngIf="getBPSales(bp).id" type="button" class="btn-delete" (click)="deleteBPSales(bp)">Delete Sales</button>
             </div>
           </form>
+          
+          <!-- Display existing BP sales -->
+          <div *ngIf="getBPSalesList(bp).length > 0" class="existing-bp-sales">
+            <h6>Previous Sales</h6>
+            <table class="bp-sales-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Opening</th>
+                  <th>Sales</th>
+                  <th>Received</th>
+                  <th>Net</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let sale of getBPSalesList(bp)">
+                  <td>{{sale.date}}</td>
+                  <td>₹{{sale.opening_balance}}</td>
+                  <td>₹{{sale.sales_amount}}</td>
+                  <td>₹{{sale.received_amount}}</td>
+                  <td>₹{{sale.net_balance}}</td>
+                  <td>
+                    <div class="action-buttons-horizontal">
+                      <button class="btn-update btn-sm" (click)="editBPSales(bp, sale)">✏️</button>
+                      <button class="btn-delete btn-sm" (click)="deleteBPSalesById(sale.id)">🗑️</button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 

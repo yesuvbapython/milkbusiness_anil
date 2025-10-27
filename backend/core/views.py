@@ -5,11 +5,11 @@ from django.db.models import Sum
 from datetime import datetime
 from .models import (Route, BusinessPoint, Supplier, Product, RouteRate, BusinessPointRate,
                     CrateDistribution, BusinessPointCrateDistribution, DailySales, 
-                    BusinessPointDailySales, AgentCashFlow, BankCashFlow)
+                    BusinessPointDailySales, AgentCashFlow, BankCashFlow, Production)
 from .serializers import (RouteSerializer, BusinessPointSerializer, SupplierSerializer, ProductSerializer, 
                          RouteRateSerializer, BusinessPointRateSerializer, CrateDistributionSerializer,
                          BusinessPointCrateDistributionSerializer, DailySalesSerializer, 
-                         BusinessPointDailySalesSerializer, AgentCashFlowSerializer, BankCashFlowSerializer)
+                         BusinessPointDailySalesSerializer, AgentCashFlowSerializer, BankCashFlowSerializer, ProductionSerializer)
 
 class RouteViewSet(viewsets.ModelViewSet):
     queryset = Route.objects.all()
@@ -188,3 +188,36 @@ class BankCashFlowViewSet(viewsets.ModelViewSet):
             'bank_cash_flow_total': bank_total,
             'total_closing_balance': total_closing_balance
         })
+
+class ProductionViewSet(viewsets.ModelViewSet):
+    queryset = Production.objects.all()
+    serializer_class = ProductionSerializer
+    
+    @action(detail=False, methods=['get'])
+    def production_summary(self, request):
+        date = request.query_params.get('date')
+        route_id = request.query_params.get('route_id')
+        
+        queryset = self.queryset
+        if date:
+            queryset = queryset.filter(date=date)
+        if route_id:
+            queryset = queryset.filter(route_id=route_id)
+            
+        data = []
+        for production in queryset:
+            data.append({
+                'route': production.route.name,
+                'supplier': production.supplier.name,
+                'product': production.product.name,
+                'date': production.date,
+                'crates_produced': production.crates_produced,
+                'crates_distributed': production.crates_distributed,
+                'crates_remaining': production.crates_remaining,
+                'total_units_produced': production.total_units_produced,
+                'total_units_distributed': production.total_units_distributed,
+                'total_units_remaining': production.total_units_remaining,
+                'notes': production.notes
+            })
+        
+        return Response(data)

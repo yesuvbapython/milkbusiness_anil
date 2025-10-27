@@ -3,7 +3,7 @@ from rest_framework.routers import DefaultRouter
 from .views import (RouteViewSet, BusinessPointViewSet, SupplierViewSet, ProductViewSet, 
                    RouteRateViewSet, BusinessPointRateViewSet, CrateDistributionViewSet,
                    BusinessPointCrateDistributionViewSet, DailySalesViewSet, 
-                   BusinessPointDailySalesViewSet, AgentCashFlowViewSet, BankCashFlowViewSet)
+                   BusinessPointDailySalesViewSet, AgentCashFlowViewSet, BankCashFlowViewSet, ProductionViewSet)
 
 router = DefaultRouter()
 router.register(r'routes', RouteViewSet)
@@ -18,6 +18,7 @@ router.register(r'daily-sales', DailySalesViewSet)
 router.register(r'business-point-daily-sales', BusinessPointDailySalesViewSet)
 router.register(r'agent-cashflow', AgentCashFlowViewSet)
 router.register(r'bank-cashflow', BankCashFlowViewSet)
+router.register(r'production', ProductionViewSet)
 
 urlpatterns = [
     path('api/', include(router.urls)),

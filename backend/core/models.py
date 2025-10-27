@@ -141,3 +141,36 @@ class BankCashFlow(models.Model):
     @property
     def net_amount(self):
         return self.credit_amount - self.debit_amount
+
+class Production(models.Model):
+    route = models.ForeignKey(Route, on_delete=models.CASCADE)
+    supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    date = models.DateField(default=timezone.now)
+    crates_produced = models.IntegerField(default=0)
+    crates_distributed = models.IntegerField(default=0)
+    crates_remaining = models.IntegerField(default=0)
+    notes = models.TextField(blank=True)
+    
+    @property
+    def total_units_produced(self):
+        return self.crates_produced * self.product.crate_multiplier
+    
+    @property
+    def total_units_distributed(self):
+        return self.crates_distributed * self.product.crate_multiplier
+    
+    @property
+    def total_units_remaining(self):
+        return self.crates_remaining * self.product.crate_multiplier
+    
+    def save(self, *args, **kwargs):
+        # Auto-calculate remaining crates
+        self.crates_remaining = self.crates_produced - self.crates_distributed
+        super().save(*args, **kwargs)
+    
+    class Meta:
+        unique_together = ['route', 'supplier', 'product', 'date']
+    
+    def __str__(self):
+        return f"{self.route.name} - {self.supplier.name} - {self.product.name} ({self.date})"

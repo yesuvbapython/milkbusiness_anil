@@ -5,7 +5,7 @@ import { HttpClientModule } from '@angular/common/http';
 import { ApiService } from './services/api.service';
 import { AuthService } from './auth/auth.service';
 import { LoginComponent } from './auth/login.component';
-import { Route, Supplier, Product, RouteRate, DailySales, AgentCashFlow, BankCashFlow } from './models/models';
+import { Route, Supplier, Product, RouteRate, DailySales, AgentCashFlow, BankCashFlow, Production } from './models/models';
 
 @Component({
   selector: 'app-root',
@@ -24,6 +24,9 @@ export class AppComponent implements OnInit {
   businessPoints: any[] = [];
   routeRates: RouteRate[] = [];
   businessPointRates: any[] = [];
+  productions: Production[] = [];
+  dailySales: DailySales[] = [];
+  businessPointDailySales: any[] = [];
   
   currentSales: DailySales = {
     route: 0,
@@ -88,6 +91,16 @@ export class AppComponent implements OnInit {
     rate: 0
   };
   
+  currentProduction: Production = {
+    route: 0,
+    supplier: 0,
+    product: 0,
+    date: new Date().toISOString().split('T')[0],
+    crates_produced: 0,
+    crates_distributed: 0,
+    notes: ''
+  };
+  
   reportDate = new Date().toISOString().split('T')[0];
   selectedRouteId: number | null = null;
   reportData: any = null;
@@ -128,6 +141,9 @@ export class AppComponent implements OnInit {
     this.apiService.getBusinessPoints().subscribe(bps => this.businessPoints = bps);
     this.apiService.getRouteRates().subscribe(rates => this.routeRates = rates);
     this.apiService.getBusinessPointRates().subscribe(rates => this.businessPointRates = rates);
+    this.loadProductions();
+    this.loadDailySales();
+    this.loadBusinessPointDailySales();
   }
 
   saveDailySales() {
@@ -317,26 +333,51 @@ export class AppComponent implements OnInit {
   }
 
   saveRouteSales() {
-    this.apiService.createDailySales(this.currentSales).subscribe(
-      response => {
-        alert('Route sales saved successfully!');
-        this.resetSalesForm();
-      },
-      error => console.error('Error saving route sales:', error)
-    );
+    if (this.currentSales.id) {
+      this.apiService.updateDailySales(this.currentSales.id, this.currentSales).subscribe(
+        response => {
+          alert('Route sales updated successfully!');
+          this.loadDailySales();
+          this.resetSalesForm();
+        },
+        error => console.error('Error updating route sales:', error)
+      );
+    } else {
+      this.apiService.createDailySales(this.currentSales).subscribe(
+        response => {
+          alert('Route sales saved successfully!');
+          this.loadDailySales();
+          this.resetSalesForm();
+        },
+        error => console.error('Error saving route sales:', error)
+      );
+    }
   }
 
   saveBusinessPointSales(bp: any) {
     const bpSales = this.getBPSales(bp);
-    // Create business point sales object
     const salesData = {
       business_point: bp.id,
       ...bpSales
     };
     
-    // Call API to save business point sales
-    console.log('Saving BP sales:', salesData);
-    alert(`${bp.name} sales saved successfully!`);
+    if (bpSales.id) {
+      this.apiService.updateBusinessPointDailySales(bpSales.id, salesData).subscribe(
+        response => {
+          alert(`${bp.name} sales updated successfully!`);
+          this.loadBusinessPointDailySales();
+        },
+        error => console.error('Error updating BP sales:', error)
+      );
+    } else {
+      this.apiService.createBusinessPointDailySales(salesData).subscribe(
+        response => {
+          alert(`${bp.name} sales saved successfully!`);
+          this.loadBusinessPointDailySales();
+        },
+        error => console.error('Error saving BP sales:', error)
+      );
+    }
   }
 
   onRouteChange() {
@@ -501,6 +542,143 @@ export class AppComponent implements OnInit {
 
   resetBPRateForm() {
     this.currentBPRate = { business_point: 0, product: 0, rate: 0 };
+  }
+  
+  // Production methods
+  loadProductions() {
+    this.apiService.getProductions().subscribe(
+      productions => this.productions = productions,
+      error => console.error('Error loading productions:', error)
+    );
+  }
+  
+  saveProduction() {
+    if (this.currentProduction.id) {
+      this.apiService.updateProduction(this.currentProduction.id, this.currentProduction).subscribe(
+        response => {
+          alert('Production updated successfully!');
+          this.loadProductions();
+          this.resetProductionForm();
+        },
+        error => console.error('Error updating production:', error)
+      );
+    } else {
+      this.apiService.createProduction(this.currentProduction).subscribe(
+        response => {
+          alert('Production saved successfully!');
+          this.loadProductions();
+          this.resetProductionForm();
+        },
+        error => console.error('Error saving production:', error)
+      );
+    }
+  }
+  
+  editProduction(production: Production) {
+    this.currentProduction = { ...production };
+  }
+  
+  deleteProduction(id: any) {
+    if (confirm('Delete production record?')) {
+      this.apiService.deleteProduction(id).subscribe(
+        () => {
+          alert('Production deleted successfully!');
+          this.loadProductions();
+        },
+        error => console.error('Error deleting production:', error)
+      );
+    }
+  }
+  
+  resetProductionForm() {
+    this.currentProduction = {
+      route: 0,
+      supplier: 0,
+      product: 0,
+      date: new Date().toISOString().split('T')[0],
+      crates_produced: 0,
+      crates_distributed: 0,
+      notes: ''
+    };
+  }
+  
+  // Enhanced sales management
+  loadDailySales() {
+    this.apiService.getDailySales().subscribe(
+      sales => this.dailySales = sales,
+      error => console.error('Error loading daily sales:', error)
+    );
+  }
+  
+  loadBusinessPointDailySales() {
+    this.apiService.getBusinessPointDailySales().subscribe(
+      sales => this.businessPointDailySales = sales,
+      error => console.error('Error loading BP daily sales:', error)
+    );
+  }
+  
+  getRouteSales() {
+    if (!this.selectedRoute) return [];
+    return this.dailySales.filter(sale => sale.route === this.selectedRoute?.id);
+  }
+  
+  editRouteSales(sale: DailySales) {
+    this.currentSales = { ...sale };
+  }
+  
+  deleteRouteSales() {
+    this.currentSales = {
+      route: this.selectedRoute?.id || 0,
+      date: new Date().toISOString().split('T')[0],
+      opening_balance: 0,
+      sales_amount: 0,
+      received_amount: 0,
+      other_deductions: 0,
+      total_liters: 0
+    };
+  }
+  
+  deleteRouteSalesById(id: any) {
+    if (confirm('Delete sales record?')) {
+      this.apiService.deleteDailySales(id).subscribe(
+        () => {
+          alert('Sales record deleted successfully!');
+          this.loadDailySales();
+        },
+        error => console.error('Error deleting sales:', error)
+      );
+    }
+  }
+  
+  getBPSalesList(bp: any) {
+    return this.businessPointDailySales.filter(sale => sale.business_point === bp.id);
+  }
+  
+  editBPSales(bp: any, sale: any) {
+    this.businessPointSales[bp.id] = { ...sale };
+  }
+  
+  deleteBPSales(bp: any) {
+    this.businessPointSales[bp.id] = {
+      date: new Date().toISOString().split('T')[0],
+      opening_balance: 0,
+      sales_amount: 0,
+      received_amount: 0,
+      other_deductions: 0,
+      total_liters: 0
+    };
+  }
+  
+  deleteBPSalesById(id: any) {
+    if (confirm('Delete business point sales record?')) {
+      this.apiService.deleteBusinessPointDailySales(id).subscribe(
+        () => {
+          alert('Business point sales record deleted successfully!');
+          this.loadBusinessPointDailySales();
+        },
+        error => console.error('Error deleting BP sales:', error)
+      );
+    }
   }
 
   deleteSupplier(id: any) {

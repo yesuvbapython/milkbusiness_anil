@@ -66,3 +66,21 @@ export interface BankCashFlow {
   description: string;
   net_amount?: number;
 }
+
+export interface Production {
+  id?: number;
+  route: number;
+  supplier: number;
+  product: number;
+  route_name?: string;
+  supplier_name?: string;
+  product_name?: string;
+  date: string;
+  crates_produced: number;
+  crates_distributed: number;
+  crates_remaining?: number;
+  total_units_produced?: number;
+  total_units_distributed?: number;
+  total_units_remaining?: number;
+  notes: string;
+}
