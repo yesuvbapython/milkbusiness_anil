@@ -21,6 +21,7 @@
     <button (click)="activeTab = 'production'" [class.active]="activeTab === 'production'">🏭 Production</button>
     <button (click)="activeTab = 'rates'" [class.active]="activeTab === 'rates'">💰 Rates</button>
     <button (click)="activeTab = 'sales'" [class.active]="activeTab === 'sales'">📊 Daily Sales</button>
+    <button (click)="activeTab = 'bank-cashflow'" [class.active]="activeTab === 'bank-cashflow'">🏦 Bank Cash Flow</button>
     <button (click)="activeTab = 'reports'" [class.active]="activeTab === 'reports'">📈 Reports</button>
     <button (click)="activeTab = 'settings'" [class.active]="activeTab === 'settings'">⚙️ Settings</button>
     <button (click)="activeTab = 'agent-overview'" [class.active]="activeTab === 'agent-overview'">📅 Agent Overview</button>
@@ -137,7 +138,14 @@
 
   <!-- Routes Tab -->
   <div *ngIf="activeTab === 'routes'" class="tab-content">
-    <h2>Routes Management</h2>
+    <div class="section-header">
+      <h2>Routes Management</h2>
+      <div class="section-actions">
+        <button class="print-btn" (click)="printRoutesList()">🖨️ Print</button>
+        <button class="export-btn" (click)="exportRoutesData('csv')">📄 Export CSV</button>
+        <button class="export-btn excel" (click)="exportRoutesData('excel')">📈 Export Excel</button>
+      </div>
+    </div>
     <form (ngSubmit)="saveRoute()" #routeForm="ngForm">
       <div class="form-row">
         <input type="text" [(ngModel)]="currentRoute.name" name="name" placeholder="Route Name (M3, M4...)" required>
@@ -168,7 +176,14 @@
 
   <!-- Business Points Tab -->
   <div *ngIf="activeTab === 'business-points'" class="tab-content">
-    <h2>Business Points Management (Agents)</h2>
+    <div class="section-header">
+      <h2>Business Points Management (Agents)</h2>
+      <div class="section-actions">
+        <button class="print-btn" (click)="printBusinessPointsList()">🖨️ Print</button>
+        <button class="export-btn" (click)="exportBusinessPointsData('csv')">📄 Export CSV</button>
+        <button class="export-btn excel" (click)="exportBusinessPointsData('excel')">📈 Export Excel</button>
+      </div>
+    </div>
     <form (ngSubmit)="saveBusinessPoint()" #bpForm="ngForm">
       <div class="form-row">
         <select [(ngModel)]="currentBusinessPoint.route" name="route" required>
@@ -213,7 +228,14 @@
 
   <!-- Production Tab -->
   <div *ngIf="activeTab === 'production'" class="tab-content">
-    <h2>Production Management</h2>
+    <div class="section-header">
+      <h2>Production Management</h2>
+      <div class="section-actions">
+        <button class="print-btn" (click)="printProductionList()">🖨️ Print</button>
+        <button class="export-btn" (click)="exportProductionData('csv')">📄 Export CSV</button>
+        <button class="export-btn excel" (click)="exportProductionData('excel')">📈 Export Excel</button>
+      </div>
+    </div>
     <form (ngSubmit)="saveProduction()" #productionForm="ngForm">
       <div class="form-row">
         <div class="form-field">
@@ -313,7 +335,14 @@
     </div>
 
     <div *ngIf="selectedRoute" class="sales-section">
-      <h3>{{selectedRoute.name}} Route Sales</h3>
+      <div class="section-header">
+        <h3>{{selectedRoute.name}} Route Sales</h3>
+        <div class="section-actions">
+          <button class="print-btn" (click)="printSalesData()">🖨️ Print</button>
+          <button class="export-btn" (click)="exportSalesData('csv')">📄 Export CSV</button>
+          <button class="export-btn excel" (click)="exportSalesData('excel')">📈 Export Excel</button>
+        </div>
+      </div>
       
       <!-- Route Level Sales -->
       <div class="route-sales">
@@ -354,7 +383,7 @@
         </form>
         
         <!-- Display existing route sales -->
-        <div *ngIf="getRouteSales().length > 0" class="existing-sales">
+        <div *ngIf="getRouteSales().length > 0" class="existing-sales printable-sales">
           <h5>Existing Sales Records</h5>
           <table>
             <thead>
@@ -497,7 +526,14 @@
 
   <!-- Rates Tab -->
   <div *ngIf="activeTab === 'rates'" class="tab-content">
-    <h2>Rates Management</h2>
+    <div class="section-header">
+      <h2>Rates Management</h2>
+      <div class="section-actions">
+        <button class="print-btn" (click)="printRatesList()">🖨️ Print</button>
+        <button class="export-btn" (click)="exportRatesData('csv')">📄 Export CSV</button>
+        <button class="export-btn excel" (click)="exportRatesData('excel')">📈 Export Excel</button>
+      </div>
+    </div>
     
     <h3>Route Rates</h3>
     <form (ngSubmit)="saveRouteRate()" #rateForm="ngForm">
@@ -584,39 +620,91 @@
     </table>
   </div>
 
-  <!-- Agent Cash Flow Tab -->
-  <div *ngIf="activeTab === 'agent-flow'" class="tab-content">
-    <h2>Agent Cash Flow</h2>
-    <form (ngSubmit)="saveAgentCashFlow()" #agentForm="ngForm">
-      <div class="form-row">
-        <select [(ngModel)]="currentAgentFlow.route" name="route" required>
-          <option value="">Select Route</option>
-          <option *ngFor="let route of routes" [value]="route.id">{{route.name}}</option>
-        </select>
-        <input type="date" [(ngModel)]="currentAgentFlow.date" name="date" required>
-      </div>
-      <div class="form-row">
-        <input type="number" [(ngModel)]="currentAgentFlow.inward_amount" name="inward_amount" placeholder="Inward Amount" step="0.01">
-        <input type="number" [(ngModel)]="currentAgentFlow.outward_amount" name="outward_amount" placeholder="Outward Amount" step="0.01">
-        <button type="submit">Save Cash Flow</button>
-      </div>
-    </form>
-  </div>
+
 
   <!-- Bank Cash Flow Tab -->
-  <div *ngIf="activeTab === 'bank-flow'" class="tab-content">
-    <h2>Bank Cash Flow</h2>
-    <form (ngSubmit)="saveBankCashFlow()" #bankForm="ngForm">
+  <div *ngIf="activeTab === 'bank-cashflow'" class="tab-content">
+    <div class="section-header">
+      <h2>Bank Cash Flow Management</h2>
+      <div class="section-actions">
+        <button class="print-btn" (click)="printBankCashFlowList()">🖨️ Print</button>
+        <button class="export-btn" (click)="exportBankCashFlowData('csv')">📄 Export CSV</button>
+        <button class="export-btn excel" (click)="exportBankCashFlowData('excel')">📈 Export Excel</button>
+      </div>
+    </div>
+    
+    <form (ngSubmit)="saveBankCashFlow()" #bankFlowForm="ngForm">
       <div class="form-row">
-        <input type="date" [(ngModel)]="currentBankFlow.date" name="date" required>
-        <input type="number" [(ngModel)]="currentBankFlow.credit_amount" name="credit_amount" placeholder="Credit Amount" step="0.01">
+        <div class="form-field">
+          <label>Date:</label>
+          <input type="date" [(ngModel)]="currentBankFlow.date" name="date" required>
+        </div>
+        <div class="form-field">
+          <label>Credit Amount:</label>
+          <input type="number" [(ngModel)]="currentBankFlow.credit_amount" name="credit_amount" step="0.01" min="0">
+        </div>
+        <div class="form-field">
+          <label>Debit Amount:</label>
+          <input type="number" [(ngModel)]="currentBankFlow.debit_amount" name="debit_amount" step="0.01" min="0">
+        </div>
       </div>
       <div class="form-row">
-        <input type="number" [(ngModel)]="currentBankFlow.debit_amount" name="debit_amount" placeholder="Debit Amount" step="0.01">
-        <input type="text" [(ngModel)]="currentBankFlow.description" name="description" placeholder="Description">
-        <button type="submit">Save Bank Flow</button>
+        <div class="form-field full-width">
+          <label>Description:</label>
+          <textarea [(ngModel)]="currentBankFlow.description" name="description" placeholder="Transaction description..."></textarea>
+        </div>
+      </div>
+      <div class="form-row">
+        <button type="submit">{{currentBankFlow.id ? 'Update' : 'Add'}} Bank Transaction</button>
+        <button *ngIf="currentBankFlow.id" type="button" class="btn-delete" (click)="resetBankFlowForm()">Cancel Edit</button>
       </div>
     </form>
+    
+    <div class="bank-summary">
+      <h4>Bank Cash Flow Summary</h4>
+      <div class="summary-cards">
+        <div class="summary-card credit">
+          <label>Total Credit</label>
+          <span>₹{{getTotalCredit()}}</span>
+        </div>
+        <div class="summary-card debit">
+          <label>Total Debit</label>
+          <span>₹{{getTotalDebit()}}</span>
+        </div>
+        <div class="summary-card balance">
+          <label>Net Balance</label>
+          <span [class]="getBankNetBalance() >= 0 ? 'positive-balance' : 'negative-balance'">₹{{getBankNetBalance()}}</span>
+        </div>
+      </div>
+    </div>
+    
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Credit Amount</th>
+          <th>Debit Amount</th>
+          <th>Net Amount</th>
+          <th>Description</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let flow of bankCashFlows">
+          <td>{{flow.date}}</td>
+          <td class="credit-amount">₹{{flow.credit_amount}}</td>
+          <td class="debit-amount">₹{{flow.debit_amount}}</td>
+          <td [class]="(flow.net_amount || 0) >= 0 ? 'positive-balance' : 'negative-balance'">₹{{flow.net_amount || 0}}</td>
+          <td>{{flow.description || 'N/A'}}</td>
+          <td>
+            <div class="action-buttons-horizontal">
+              <button class="btn-update btn-sm" (click)="editBankCashFlow(flow)">✏️ Edit</button>
+              <button class="btn-delete btn-sm" (click)="deleteBankCashFlow(flow.id)">🗑️ Delete</button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
   </div>
 
   <!-- Reports Tab -->
@@ -645,12 +733,37 @@
       <button (click)="generateCashBalanceReport()">Cash Balance Report</button>
       <button (click)="generateBusinessPointCashBalance()">Business Point Cash Balance</button>
       <button (click)="generateAgentCashFlowReport()">Agent Cash Flow</button>
-      <button (click)="generateBankCashFlowReport()">Bank Cash Flow</button>
+      <button (click)="generateBankCashFlowReport()">Bank Cash Flow Report</button>
       <button (click)="generateCashClosingBalance()">Cash Closing Balance</button>
+      <button (click)="generateProductionReport()">Production Report</button>
+    </div>
+    
+    <div class="export-section">
+      <h4>📊 Export Options</h4>
+      <div class="export-controls">
+        <div class="date-range-export">
+          <label>Export Date Range:</label>
+          <input type="date" [(ngModel)]="exportFromDate" placeholder="From Date">
+          <input type="date" [(ngModel)]="exportToDate" placeholder="To Date">
+        </div>
+        <div class="export-buttons">
+          <button class="export-btn" (click)="exportAllData('csv')">📄 Export All Data (CSV)</button>
+          <button class="export-btn excel" (click)="exportAllData('excel')">📊 Export All Data (Excel)</button>
+          <button class="export-btn" (click)="exportDateRangeData('csv')">📅 Export Date Range (CSV)</button>
+          <button class="export-btn excel" (click)="exportDateRangeData('excel')">📅 Export Date Range (Excel)</button>
+        </div>
+      </div>
     </div>
 
     <div *ngIf="reportData" class="report-section">
-      <h3>{{reportTitle}}</h3>
+      <div class="report-header">
+        <h3>{{reportTitle}}</h3>
+        <div class="report-actions">
+          <button class="print-btn" (click)="printReport()">🖨️ Print</button>
+          <button class="export-btn" (click)="exportReportCSV()">📄 Export CSV</button>
+          <button class="export-btn excel" (click)="exportReportExcel()">📈 Export Excel</button>
+        </div>
+      </div>
       <div *ngIf="reportType === 'cash-balance'">
         <table>
           <thead>
@@ -759,6 +872,35 @@
           <label>Total Closing Balance:</label>
           <span>₹{{reportData.total_closing_balance}}</span>
         </div>
+      </div>
+
+      <div *ngIf="reportType === 'production'">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Route</th>
+              <th>Supplier</th>
+              <th>Product</th>
+              <th>Produced</th>
+              <th>Distributed</th>
+              <th>Remaining</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of reportData">
+              <td>{{item.date}}</td>
+              <td>{{item.route}}</td>
+              <td>{{item.supplier}}</td>
+              <td>{{item.product}}</td>
+              <td>{{item.crates_produced}} crates</td>
+              <td>{{item.crates_distributed}} crates</td>
+              <td>{{item.crates_remaining}} crates</td>
+              <td>{{item.notes || 'N/A'}}</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
   </div>

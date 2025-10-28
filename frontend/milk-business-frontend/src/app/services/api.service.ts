@@ -170,6 +170,14 @@ export class ApiService {
     return this.http.get<any>(`${this.baseUrl}/bank-cashflow/cash_closing_balance/?${params}`);
   }
 
+  updateBankCashFlow(id: number, flow: BankCashFlow): Observable<BankCashFlow> {
+    return this.http.put<BankCashFlow>(`${this.baseUrl}/bank-cashflow/${id}/`, flow);
+  }
+
+  deleteBankCashFlow(id: number): Observable<any> {
+    return this.http.delete(`${this.baseUrl}/bank-cashflow/${id}/`);
+  }
+
   // Production methods
   getProductions(): Observable<Production[]> {
     return this.http.get<Production[]>(`${this.baseUrl}/production/`);

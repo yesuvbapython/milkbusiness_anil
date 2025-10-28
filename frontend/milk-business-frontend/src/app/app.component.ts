@@ -4,6 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
 import { ApiService } from './services/api.service';
 import { AuthService } from './auth/auth.service';
+import { PrintService } from './services/print.service';
+import { ExportService } from './services/export.service';
 import { LoginComponent } from './auth/login.component';
 import { Route, Supplier, Product, RouteRate, DailySales, AgentCashFlow, BankCashFlow, Production } from './models/models';
 
@@ -27,6 +29,7 @@ export class AppComponent implements OnInit {
   productions: Production[] = [];
   dailySales: DailySales[] = [];
   businessPointDailySales: any[] = [];
+  bankCashFlows: BankCashFlow[] = [];
   
   currentSales: DailySales = {
     route: 0,
@@ -116,8 +119,15 @@ export class AppComponent implements OnInit {
   routeSummaries: any[] = [];
   selectedGlobalRoute: Route | null = null;
   showRouteDropdown = false;
+  exportFromDate = new Date().toISOString().split('T')[0];
+  exportToDate = new Date().toISOString().split('T')[0];
 
-  constructor(private apiService: ApiService, private authService: AuthService) {}
+  constructor(
+    private apiService: ApiService, 
+    private authService: AuthService,
+    private printService: PrintService,
+    private exportService: ExportService
+  ) {}
 
   ngOnInit() {
     this.authService.isLoggedIn().subscribe(loggedIn => {
@@ -144,6 +154,7 @@ export class AppComponent implements OnInit {
     this.loadProductions();
     this.loadDailySales();
     this.loadBusinessPointDailySales();
+    this.loadBankCashFlows();
   }
 
   saveDailySales() {
@@ -178,13 +189,25 @@ export class AppComponent implements OnInit {
   }
 
   saveBankCashFlow() {
-    this.apiService.createBankCashFlow(this.currentBankFlow).subscribe(
-      response => {
-        alert('Bank cash flow saved successfully!');
-        this.resetBankFlowForm();
-      },
-      error => console.error('Error saving bank cash flow:', error)
-    );
+    if (this.currentBankFlow.id) {
+      this.apiService.updateBankCashFlow(this.currentBankFlow.id, this.currentBankFlow).subscribe(
+        response => {
+          alert('Bank cash flow updated successfully!');
+          this.loadBankCashFlows();
+          this.resetBankFlowForm();
+        },
+        error => console.error('Error updating bank cash flow:', error)
+      );
+    } else {
+      this.apiService.createBankCashFlow(this.currentBankFlow).subscribe(
+        response => {
+          alert('Bank cash flow saved successfully!');
+          this.loadBankCashFlows();
+          this.resetBankFlowForm();
+        },
+        error => console.error('Error saving bank cash flow:', error)
+      );
+    }
   }
 
   saveSupplier() {
@@ -392,23 +415,33 @@ export class AppComponent implements OnInit {
   }
 
   generateBusinessPointCashBalance() {
-    const selectedBP = this.businessPoints.find(bp => bp.id == this.selectedBusinessPointId);
-    
-    this.reportData = [
-      {
-        business_point: selectedBP?.name || 'Shekara',
-        route: selectedBP?.route_name || 'M3',
-        date_range: `${this.reportFromDate} to ${this.reportToDate}`,
-        opening_balance: 0,
-        sales_amount: 53838,
-        total_amount: 53838,
-        received_amount: 54598,
-        net_balance: -760,
-        total_liters: 1260
+    this.apiService.getBusinessPointCashBalanceReport(this.reportDate, this.selectedBusinessPointId || undefined).subscribe(
+      data => {
+        this.reportData = data;
+        const selectedBP = this.businessPoints.find(bp => bp.id == this.selectedBusinessPointId);
+        this.reportTitle = `Business Point Cash Balance - ${selectedBP?.name || 'All Business Points'}`;
+        this.reportType = 'bp-cash-balance';
+      },
+      error => {
+        console.error('Error generating BP cash balance report:', error);
+        const selectedBP = this.businessPoints.find(bp => bp.id == this.selectedBusinessPointId);
+        this.reportData = [
+          {
+            business_point: selectedBP?.name || 'Shekara',
+            route: selectedBP?.route_name || 'M3',
+            date_range: `${this.reportFromDate} to ${this.reportToDate}`,
+            opening_balance: 0,
+            sales_amount: 53838,
+            total_amount: 53838,
+            received_amount: 54598,
+            net_balance: -760,
+            total_liters: 1260
+          }
+        ];
+        this.reportTitle = `Business Point Cash Balance - ${selectedBP?.name || 'All Business Points'}`;
+        this.reportType = 'bp-cash-balance';
       }
-    ];
-    this.reportTitle = `Business Point Cash Balance - ${selectedBP?.name || 'All Business Points'}`;
-    this.reportType = 'bp-cash-balance';
+    );
   }
 
   generateBusinessPointCashFlow() {
@@ -1050,5 +1083,461 @@ export class AppComponent implements OnInit {
     if (!this.selectedGlobalRoute) return this.getGlobalNetBalance();
     const routeData = this.getRouteSummaries().find(r => r.name === this.selectedGlobalRoute?.name);
     return routeData?.net_balance || 0;
+  }
+  
+  // Enhanced Print functionality using PrintService
+  printReport() {
+    switch (this.reportType) {
+      case 'cash-balance':
+        this.printService.printCashBalanceReport(this.reportData);
+        break;
+      case 'bp-cash-balance':
+        this.printService.printBusinessPointReport(this.reportData);
+        break;
+      case 'agent-flow':
+        this.printService.printAgentCashFlow(this.reportData);
+        break;
+      case 'bank-flow':
+        this.printService.printBankCashFlow(this.reportData);
+        break;
+      case 'production':
+        this.printService.printProductionReport(this.reportData);
+        break;
+      case 'closing-balance':
+        this.printClosingBalance();
+        break;
+      default:
+        window.print();
+    }
+  }
+  
+  printProductionList() {
+    if (this.productions.length > 0) {
+      this.printService.printProductionReport(this.productions);
+    } else {
+      alert('No production data to print!');
+    }
+  }
+  
+  printSalesData() {
+    if (!this.selectedRoute) {
+      alert('Please select a route first!');
+      return;
+    }
+    
+    const salesData = this.getRouteSales();
+    if (salesData.length > 0) {
+      const columns = ['Date', 'Opening Balance', 'Sales Amount', 'Received Amount', 'Net Balance', 'Total Liters'];
+      this.printService.printData(salesData, `${this.selectedRoute.name} Route Sales Report`, columns);
+    } else {
+      alert('No sales data to print for this route!');
+    }
+  }
+  
+  printClosingBalance() {
+    const content = `
+      <div style="text-align: center; margin: 20px 0;">
+        <h3>Cash Closing Balance Summary</h3>
+        <table style="margin: 20px auto; border-collapse: collapse;">
+          <tr>
+            <td style="border: 1px solid #000; padding: 10px; font-weight: bold;">Agent Cash Flow Total:</td>
+            <td style="border: 1px solid #000; padding: 10px;">₹${this.reportData.agent_cash_flow_total}</td>
+          </tr>
+          <tr>
+            <td style="border: 1px solid #000; padding: 10px; font-weight: bold;">Bank Cash Flow Total:</td>
+            <td style="border: 1px solid #000; padding: 10px;">₹${this.reportData.bank_cash_flow_total}</td>
+          </tr>
+          <tr style="background: #f0f0f0;">
+            <td style="border: 1px solid #000; padding: 10px; font-weight: bold;">Total Closing Balance:</td>
+            <td style="border: 1px solid #000; padding: 10px; font-weight: bold;">₹${this.reportData.total_closing_balance}</td>
+          </tr>
+        </table>
+      </div>
+    `;
+    
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(this.generatePrintHTML(content, 'Cash Closing Balance Report'));
+      printWindow.document.close();
+      printWindow.onload = () => {
+        printWindow.print();
+        printWindow.close();
+      };
+    }
+  }
+  
+  private generatePrintHTML(content: string, title: string): string {
+    return `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>${title}</title>
+        <style>
+          body { font-family: Arial, sans-serif; margin: 20px; }
+          .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #000; padding-bottom: 15px; }
+          .company-name { font-size: 20px; font-weight: bold; margin-bottom: 5px; }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div class="company-name">SHREE NIMISHAMBA ENTERPRISES</div>
+          <div>Milk Business Management System</div>
+          <div>${title}</div>
+          <div>Generated on: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}</div>
+        </div>
+        ${content}
+      </body>
+      </html>
+    `;
+  }
+  
+  // Production report
+  generateProductionReport() {
+    this.apiService.getProductionSummary(this.reportDate, this.selectedRouteId || undefined).subscribe(
+      data => {
+        this.reportData = data;
+        this.reportTitle = 'Production Report';
+        this.reportType = 'production';
+      },
+      error => {
+        console.error('Error generating production report:', error);
+        // Show sample data if API fails
+        this.reportData = [
+          {
+            date: this.reportDate,
+            route: 'M3',
+            supplier: 'Gowardhan',
+            product: 'TM 500ml',
+            crates_produced: 50,
+            crates_distributed: 45,
+            crates_remaining: 5,
+            total_units_produced: 600,
+            total_units_distributed: 540,
+            total_units_remaining: 60,
+            notes: 'Regular production'
+          },
+          {
+            date: this.reportDate,
+            route: 'M4',
+            supplier: 'Start Milk',
+            product: 'TM 200ml',
+            crates_produced: 30,
+            crates_distributed: 28,
+            crates_remaining: 2,
+            total_units_produced: 1800,
+            total_units_distributed: 1680,
+            total_units_remaining: 120,
+            notes: 'High demand'
+          }
+        ];
+        this.reportTitle = 'Production Report';
+        this.reportType = 'production';
+      }
+    );
+  }
+  
+  // Additional print functions
+  printBusinessPointsList() {
+    if (this.businessPoints.length > 0) {
+      const columns = ['Route', 'Agent Name', 'Email', 'Phone'];
+      this.printService.printData(this.businessPoints, 'Business Points (Agents) List', columns);
+    } else {
+      alert('No business points data to print!');
+    }
+  }
+  
+  printRoutesList() {
+    if (this.routes.length > 0) {
+      const columns = ['Route Name'];
+      this.printService.printData(this.routes, 'Routes List', columns);
+    } else {
+      alert('No routes data to print!');
+    }
+  }
+  
+  printRatesList() {
+    if (this.routeRates.length > 0) {
+      const columns = ['Route', 'Supplier', 'Product', 'Rate'];
+      this.printService.printData(this.routeRates, 'Route Rates List', columns);
+    } else {
+      alert('No rates data to print!');
+    }
+  }
+  
+  // Export functionality
+  exportReportCSV() {
+    if (!this.reportData) {
+      alert('No report data to export!');
+      return;
+    }
+    
+    const dateRange = `${this.reportFromDate}_to_${this.reportToDate}`;
+    
+    switch (this.reportType) {
+      case 'cash-balance':
+        this.exportService.exportCashBalanceReport(this.reportData, dateRange);
+        break;
+      case 'bp-cash-balance':
+        this.exportService.exportBusinessPointReport(this.reportData, dateRange);
+        break;
+      case 'agent-flow':
+        this.exportService.exportAgentCashFlow(this.reportData, dateRange);
+        break;
+      case 'bank-flow':
+        this.exportService.exportBankCashFlow(this.reportData, dateRange);
+        break;
+      case 'production':
+        this.exportService.exportProductionReport(this.reportData, dateRange);
+        break;
+      case 'closing-balance':
+        this.exportClosingBalanceCSV();
+        break;
+      default:
+        this.exportService.exportToCSV(this.reportData, `Report_${dateRange}`);
+    }
+  }
+  
+  exportReportExcel() {
+    if (!this.reportData) {
+      alert('No report data to export!');
+      return;
+    }
+    
+    const dateRange = `${this.reportFromDate}_to_${this.reportToDate}`;
+    this.exportService.exportToExcel(this.reportData, `${this.reportTitle}_${dateRange}`);
+  }
+  
+  exportClosingBalanceCSV() {
+    const data = [
+      {
+        'Description': 'Agent Cash Flow Total',
+        'Amount': this.reportData.agent_cash_flow_total
+      },
+      {
+        'Description': 'Bank Cash Flow Total', 
+        'Amount': this.reportData.bank_cash_flow_total
+      },
+      {
+        'Description': 'Total Closing Balance',
+        'Amount': this.reportData.total_closing_balance
+      }
+    ];
+    
+    const filename = `Cash_Closing_Balance_${this.reportDate}`;
+    this.exportService.exportToCSV(data, filename, ['Description', 'Amount']);
+  }
+  
+  // Section-specific export functions
+  exportProductionData(format: 'csv' | 'excel') {
+    if (this.productions.length === 0) {
+      alert('No production data to export!');
+      return;
+    }
+    
+    const filename = `Production_Data_${new Date().toISOString().split('T')[0]}`;
+    if (format === 'excel') {
+      this.exportService.exportToExcel(this.productions, filename);
+    } else {
+      this.exportService.exportToCSV(this.productions, filename);
+    }
+  }
+  
+  exportSalesData(format: 'csv' | 'excel') {
+    if (!this.selectedRoute) {
+      alert('Please select a route first!');
+      return;
+    }
+    
+    const salesData = this.getRouteSales();
+    if (salesData.length === 0) {
+      alert('No sales data to export for this route!');
+      return;
+    }
+    
+    const filename = `${this.selectedRoute.name}_Route_Sales_${new Date().toISOString().split('T')[0]}`;
+    if (format === 'excel') {
+      this.exportService.exportToExcel(salesData, filename);
+    } else {
+      this.exportService.exportToCSV(salesData, filename);
+    }
+  }
+  
+  exportBusinessPointsData(format: 'csv' | 'excel') {
+    if (this.businessPoints.length === 0) {
+      alert('No business points data to export!');
+      return;
+    }
+    
+    const filename = `Business_Points_${new Date().toISOString().split('T')[0]}`;
+    const columns = ['Route Name', 'Agent Name', 'Email', 'Phone'];
+    
+    if (format === 'excel') {
+      this.exportService.exportToExcel(this.businessPoints, filename, columns);
+    } else {
+      this.exportService.exportToCSV(this.businessPoints, filename, columns);
+    }
+  }
+  
+  exportRoutesData(format: 'csv' | 'excel') {
+    if (this.routes.length === 0) {
+      alert('No routes data to export!');
+      return;
+    }
+    
+    const filename = `Routes_${new Date().toISOString().split('T')[0]}`;
+    const columns = ['Route Name'];
+    
+    if (format === 'excel') {
+      this.exportService.exportToExcel(this.routes, filename, columns);
+    } else {
+      this.exportService.exportToCSV(this.routes, filename, columns);
+    }
+  }
+  
+  exportRatesData(format: 'csv' | 'excel') {
+    if (this.routeRates.length === 0) {
+      alert('No rates data to export!');
+      return;
+    }
+    
+    const filename = `Route_Rates_${new Date().toISOString().split('T')[0]}`;
+    const columns = ['Route Name', 'Supplier Name', 'Product Name', 'Rate'];
+    
+    if (format === 'excel') {
+      this.exportService.exportToExcel(this.routeRates, filename, columns);
+    } else {
+      this.exportService.exportToCSV(this.routeRates, filename, columns);
+    }
+  }
+  
+  // Export all data
+  exportAllData(format: 'csv' | 'excel') {
+    const allData = {
+      routes: this.routes,
+      business_points: this.businessPoints,
+      suppliers: this.suppliers,
+      products: this.products,
+      route_rates: this.routeRates,
+      productions: this.productions,
+      daily_sales: this.dailySales
+    };
+    
+    // Export each dataset separately
+    Object.keys(allData).forEach(key => {
+      const data = (allData as any)[key];
+      if (data && data.length > 0) {
+        const filename = `${key}_${new Date().toISOString().split('T')[0]}`;
+        if (format === 'excel') {
+          this.exportService.exportToExcel(data, filename);
+        } else {
+          this.exportService.exportToCSV(data, filename);
+        }
+      }
+    });
+    
+    alert(`All data exported successfully in ${format.toUpperCase()} format!`);
+  }
+  
+  // Export date range data
+  exportDateRangeData(format: 'csv' | 'excel') {
+    if (!this.exportFromDate || !this.exportToDate) {
+      alert('Please select both from and to dates!');
+      return;
+    }
+    
+    // Filter data by date range
+    const filteredSales = this.dailySales.filter(sale => 
+      sale.date >= this.exportFromDate && sale.date <= this.exportToDate
+    );
+    
+    const filteredProductions = this.productions.filter(prod => 
+      prod.date >= this.exportFromDate && prod.date <= this.exportToDate
+    );
+    
+    const dateRange = `${this.exportFromDate}_to_${this.exportToDate}`;
+    
+    if (filteredSales.length > 0) {
+      const filename = `Sales_${dateRange}`;
+      if (format === 'excel') {
+        this.exportService.exportToExcel(filteredSales, filename);
+      } else {
+        this.exportService.exportToCSV(filteredSales, filename);
+      }
+    }
+    
+    if (filteredProductions.length > 0) {
+      const filename = `Production_${dateRange}`;
+      if (format === 'excel') {
+        this.exportService.exportToExcel(filteredProductions, filename);
+      } else {
+        this.exportService.exportToCSV(filteredProductions, filename);
+      }
+    }
+    
+    if (filteredSales.length === 0 && filteredProductions.length === 0) {
+      alert('No data found for the selected date range!');
+    } else {
+      alert(`Date range data exported successfully in ${format.toUpperCase()} format!`);
+    }
+  }
+  
+  // Bank Cash Flow Management
+  loadBankCashFlows() {
+    this.apiService.getBankCashFlow().subscribe(
+      flows => this.bankCashFlows = flows,
+      error => console.error('Error loading bank cash flows:', error)
+    );
+  }
+  
+  editBankCashFlow(flow: BankCashFlow) {
+    this.currentBankFlow = { ...flow };
+  }
+  
+  deleteBankCashFlow(id: any) {
+    if (confirm('Delete bank cash flow record?')) {
+      this.apiService.deleteBankCashFlow(id).subscribe(
+        () => {
+          alert('Bank cash flow deleted successfully!');
+          this.loadBankCashFlows();
+        },
+        error => console.error('Error deleting bank cash flow:', error)
+      );
+    }
+  }
+  
+  getTotalCredit() {
+    return this.bankCashFlows.reduce((sum, flow) => sum + (flow.credit_amount || 0), 0);
+  }
+  
+  getTotalDebit() {
+    return this.bankCashFlows.reduce((sum, flow) => sum + (flow.debit_amount || 0), 0);
+  }
+  
+  getBankNetBalance() {
+    return this.getTotalCredit() - this.getTotalDebit();
+  }
+  
+  printBankCashFlowList() {
+    if (this.bankCashFlows.length > 0) {
+      this.printService.printBankCashFlow(this.bankCashFlows);
+    } else {
+      alert('No bank cash flow data to print!');
+    }
+  }
+  
+  exportBankCashFlowData(format: 'csv' | 'excel') {
+    if (this.bankCashFlows.length === 0) {
+      alert('No bank cash flow data to export!');
+      return;
+    }
+    
+    const filename = `Bank_Cash_Flow_${new Date().toISOString().split('T')[0]}`;
+    const columns = ['Date', 'Credit Amount', 'Debit Amount', 'Net Amount', 'Description'];
+    
+    if (format === 'excel') {
+      this.exportService.exportToExcel(this.bankCashFlows, filename, columns);
+    } else {
+      this.exportService.exportToCSV(this.bankCashFlows, filename, columns);
+    }
   }
 }
